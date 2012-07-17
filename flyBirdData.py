@@ -5,6 +5,8 @@ from xbee import XBee
 from lib.payload import Payload
 from lib.commandinterface import CommandInterface
 from lib.telemetryreader import TelemetryReader
+from lib import network_const
+from lib.dictionaries import *
 
 def txCallback(dest, packet):
     global xb
@@ -58,23 +60,23 @@ def body():
     raw_input("Press any key to begin initialization...")    
         
     coord.getGyroCalibParam()        
-    coord.setRemoteControl(True)
-    coord.setRemoteControlValues(0.0, 0.0)
+    coord.setRegulatorState(RegulatorStates['Remote Control'])
+    coord.setRemoteControlValues(0.0, 0.0, 0.0)
     
     raw_input("Press any key to begin flight...")
     
-    coord.setRemoteControlValues(thrust, steer)
+    coord.setRemoteControlValues(thrust, steer, 0.0)
     
     raw_input("Press any key to begin sensor dump...")
     coord.startSensorDump(datapoints)
     
     raw_input("Press any key to begin landing...")
 
-    coord.setRemoteControlValues(45.0, 0.0)
+    coord.setRemoteControlValues(45.0, 0.0, 0.0)
     
     raw_input("Press any key to halt motors...")
     
-    coord.setRemoteControlValues(0.0, 0.0)
+    coord.setRemoteControlValues(0.0, 0.0, 0.0)
     
     raw_input("Press any key to request data...")
     coord.requestDumpData(0x80, 0x80 + int(math.ceil(datapoints/12.0)), 22)

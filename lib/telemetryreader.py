@@ -103,6 +103,42 @@ class TelemetryReader(object):
                 self.file.write(str(xl[1]) + "\t")
                 self.file.write(str(xl[2]) + "\t")
                 self.file.write(str(xl_timestamp) + "\n")
+                
+        elif type == Commands['GET_MEM_CONTENTS_TELEM']:
+
+            if(len(data) != 22):                
+                print 'Invalid GET_MEM_CONTENTS_TELEM packet of length ' + str(len(data)) + '\n'
+                return
+            
+            telemetryData = unpack('L3hL3hH', data)
+            
+            gyro_timestamp = telemetryData[0];
+            pose = telemetryData[1:4];     
+            xl_timestamp = telemetryData[4];                               
+            xl = telemetryData[5:8];
+            sample_number = telemetryData[8];
+
+            eulers = []
+            eulers.append(int(bams16toDeg(pose[0])))
+            eulers.append(int(bams16toDeg(pose[1])))
+            eulers.append(int(bams16toDeg(pose[2])))
+            
+            if (self.cprint == True):
+                print("Sample number: " + str(sample_number))
+                #print("Gyro data: " + str(gyro))
+                #print("Gyro timestamp: " + str(gyro_timestamp))
+                #print("Xl data: " + str(xl))
+                #print("Xl timestamp: " + str(xl_timestamp))
+            if (self.fprint == True) & (self.file != None):
+                self.file.write(str(sample_number) + "\t")
+                self.file.write(str(eulers[0]) + "\t")
+                self.file.write(str(eulers[1]) + "\t")
+                self.file.write(str(eulers[2]) + "\t")
+                self.file.write(str(gyro_timestamp) + "\t")
+                self.file.write(str(xl[0]) + "\t")
+                self.file.write(str(xl[1]) + "\t")
+                self.file.write(str(xl[2]) + "\t")
+                self.file.write(str(xl_timestamp) + "\n")
 
         elif type == Commands['GET_GYRO_CALIB_PARAM']:
             
@@ -119,14 +155,14 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 18):
+            if(len(data) != 10):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
                 
-            raw = unpack('L3H4h', data)
+            raw = unpack('L3h', data)
             timestamp = raw[0]
             pose = raw[1:4]
-            gyro = raw[4:8]
+            #gyro = raw[4:8]
       
             eulers = []
             eulers.append(int(bams16toDeg(pose[0])))
@@ -136,14 +172,14 @@ class TelemetryReader(object):
             if(self.cprint == True):
                 print "Timestamp: " + str(timestamp)
                 print "Yaw: " + str(eulers[0]) + " pitch: " + str(eulers[1]) + " roll: " + str(eulers[2])
-                print "Gyro temp: " + str((13200 + gyro[0])/280 + 35) + " Values: " + str(gyro[1:4])
+                #print "Gyro temp: " + str((13200 + gyro[0])/280 + 35) + " Values: " + str(gyro[1:3])
 
             if(self.fprint == True):
                 self.file.write(str(timestamp) + "\t")
-                self.file.write(str(gyro[0]) + "\t")
-                self.file.write(str(gyro[1]) + "\t")
-                self.file.write(str(gyro[2]) + "\t")
-                self.file.write(str(gyro[3]) + "\n")
+                self.file.write(str(eulers[0]) + "\t")
+                self.file.write(str(eulers[1]) + "\t")
+                self.file.write(str(eulers[2]) + "\n")
+                #self.file.write(str(eulers[3]) + "\n")
                 
         elif type == Commands['CAM_PARAM_RESPONSE']:
             

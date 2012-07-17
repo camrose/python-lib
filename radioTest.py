@@ -24,7 +24,7 @@ def processPacket(packet):
     type = pld.type
     data = pld.data
     
-    if(type == 0x10):
+    if(type == 0x1F):
         reception_begun = True
         num_received += 1;
         num_dat = unpack('H', data[0:2])
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     DEFAULT_BAUD_RATE = 115200
     DEFAULT_SOURCE = 0x1020
     DEFAULT_DESTINATION = '\xff\xff'
-    DEFAULT_PAN = 0x1001
+    DEFAULT_PAN = 0x1005
     DEFAULT_ITERS = 200
     DEFAULT_SIZE = 10
     
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     number_expected = iters
     
     data_pack = pack('HH', iters, size)
-    pld = Payload(data = data_pack, status = 0, type = 0x10)
+    pld = Payload(data = data_pack, status = 0, type = 0x1F)
     
     try:
         while(reception_begun == False):

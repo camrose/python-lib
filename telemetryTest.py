@@ -15,7 +15,7 @@ if __name__ == '__main__':
     DEFAULT_COM_PORT = 'COM21'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
-    DEFAULT_PAN = 0x1001
+    DEFAULT_PAN = 0x1005
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT
@@ -40,6 +40,8 @@ if __name__ == '__main__':
     xb.at(command = 'ID', parameter = pack('>H', DEFAULT_PAN))
     
     coord.setEstimateRunning(True)
+    coord.runGyroCalib(1000);
+    coord.zeroEstimate();
     
     while(True):
         try:

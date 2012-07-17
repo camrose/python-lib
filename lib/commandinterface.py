@@ -23,6 +23,13 @@ class CommandInterface(object):
     def disableDebug(self):
         self.debugPrint = False
 
+    def runGyroCalib(self, samples):
+        data_pack = pack('H', samples)
+        if self.debugPrint:
+            print "Requesting gyro calibration of " + str(samples) + " samples."           
+        pld = Payload(data = data_pack, status = 0, type = Commands['RUN_GYRO_CALIB'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
     def getGyroCalibParam(self):
         data_pack = pack('H', 0)
         if self.debugPrint:
@@ -44,6 +51,14 @@ class CommandInterface(object):
                   ", " + str(tx_size) + " bytes at a time."
         pld = Payload(data = data_pack, status = 0, type = Commands['GET_MEM_CONTENTS'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def requestDumpDataTelem(self, start_page, end_page, tx_size):
+        data_pack = pack('3H', start_page, end_page, tx_size)
+        if self.debugPrint:
+            print "Requesting memory from page " + str(start_page) + " to " + str(end_page) +\
+                  ", " + str(tx_size) + " bytes at a time."
+        pld = Payload(data = data_pack, status = 0, type = Commands['GET_MEM_CONTENTS_TELEM'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
     def requestRawFrame(self):
         data_pack = pack('L', 0)
@@ -57,6 +72,13 @@ class CommandInterface(object):
         if self.debugPrint:
             print "Requesting telemetry."
         pld = Payload(data = data_pack, status = 0, type = Commands['REQUEST_TELEMETRY'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def recordTelemetry(self, datasets):
+        data_pack = pack('H', datasets)
+        if self.debugPrint:
+            print "Requesting " + str(datasets) + " samples to be written to flash."
+        pld = Payload(data = data_pack, status = 0, type = Commands['RECORD_TELEMETRY'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
     def setBackgroundFrame(self):
@@ -142,6 +164,13 @@ class CommandInterface(object):
         if self.debugPrint:
             print "Setting high pass to " + str(flag)
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_HP'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def zeroEstimate(self):
+        data_pack = pack('H', 0)
+        if self.debugPrint:
+            print "Zeroing attitude estimate."
+        pld = Payload(data = data_pack, status = 0, type = Commands['ZERO_ESTIMATE'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def processPacket(self, packet):
