@@ -98,7 +98,7 @@ class KeyboardInterface(object):
             self.ref_changed = True
         # Telemetry commands        
         elif c == 'r':                
-            self.comm.startSensorDump(1)          
+            self.comm.startSensorDump(50)          
         elif c == 'f':                
             self.comm.startSensorDump(0)
         elif c == 'v':
@@ -138,7 +138,7 @@ class KeyboardInterface(object):
             raise Exception('Exit')
         
         if self.rc_changed:        
-            self.comm.setRemoteControlValues( self.thrust.value(), self.steer.value(), self.elevator.value() );             
+            self.comm.setRemoteControlValues( self.thrust.value()*100, self.steer.value(), self.elevator.value() );             
             self.rc_changed = False
             
         if self.rate_changed:
@@ -169,7 +169,7 @@ def loop():
     DEFAULT_COM_PORT = 'COM7'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
-    DEFAULT_PAN = 0x1001
+    DEFAULT_PAN = 0x1005
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT

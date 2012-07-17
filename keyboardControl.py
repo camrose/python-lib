@@ -2,7 +2,7 @@ import time, sys, msvcrt
 from struct import *
 from serial import *
 from xbee import XBee
-from lib import network_const
+#from lib import network_const
 from lib.dictionaries import *
 from lib.command_interface import CommandInterface
 from lib.network_coordinator import NetworkCoordinator
@@ -27,7 +27,7 @@ def loop():
     DEFAULT_COM_PORT = 'COM7'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
-    DEFAULT_PAN = '\x10\x01'
+    DEFAULT_PAN = 0x1005
     
     
     if len(sys.argv) == 1:
@@ -41,13 +41,14 @@ def loop():
     else:
         print "Wrong number of arguments. Must be: COM BAUD ADDR"
         sys.exit(1)
-                
+
     coord = CommandInterface(addr, txCallback)
-    coord.enableDebug()
-    
-    ser = Serial(port = com, baudrate = baud) 
+    coord.enableDebug() 
+    ser = Serial(port = com, baudrate = baud)
     xb = XBee(ser)
+    
     print "Setting PAN ID to " + hex(DEFAULT_PAN)
+
     xb.at(command = 'ID', parameter = pack('>H', DEFAULT_PAN))         
     
     thrust = 0.0
@@ -79,7 +80,7 @@ def loop():
             elif c == 'e':
                 break
             elif c == 't':
-                coord.setRegulatorMode(RegulatorStates['Remote Control'])            
+                coord.setRegulatorMode(2)            
                 
             if thrust > THRUST_UPPER_LIMIT:
                 thrust = THRUST_UPPER_LIMIT

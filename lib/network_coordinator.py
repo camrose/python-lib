@@ -15,18 +15,18 @@ BOOTLOADER_CHANNEL = 0x15
 
 # Network discovery/assignment constants
 DISCOVERY_SERVER_ADDR = 0x1020
-DISCOVERY_SERVER_PAN = 0x1001
+DISCOVERY_SERVER_PAN = 0x1005
 DISCOVERY_CLIENT_ADDR = 0x1101
-DISCOVERY_CLIENT_PAN = 0x1001
-DISCOVERY_CHANNEL = 0x15 # Not the TV channel...
+DISCOVERY_CLIENT_PAN = 0x1005
+DISCOVERY_CHANNEL = 0x12 # Not the TV channel...
 
 # Active formation network constants
 # Currently the same as the discovery network due to XBee
 # PAN addressing limitations
 ACTIVE_SERVER_ADDR = 0x1020
-ACTIVE_SERVER_PAN = 0x1001
-ACTIVE_CLIENT_PAN = 0x1001
-ACTIVE_CHANNEL = 0x15
+ACTIVE_SERVER_PAN = 0x1005
+ACTIVE_CLIENT_PAN = 0x1005
+ACTIVE_CHANNEL = 0x12
 
 BROADCAST_ADDRESS = '\xFF\xFF'
 
@@ -336,8 +336,8 @@ def txCallback(dest, packet):
 # Standalone mode uses all default values
 if __name__ == '__main__':
 
-    DEFAULT_COM_PORT = 'COM21'
-    DEFAULT_BAUD_RATE = 115200
+    DEFAULT_COM_PORT = 'COM3'
+    DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDR = 0x1020
     DEFAULT_UPDATE_RATE = 0.1 # Directory broadcast rate in hertz
     
