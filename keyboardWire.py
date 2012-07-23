@@ -124,9 +124,9 @@ class KeyboardInterface(object):
         elif c == 'z':
             self.comm.zeroEstimate()                                  
         # Configuration
-        elif c == 'p':                
-            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )                                
+        elif c == 'p':
             self.comm.setRegulatorRateFilter( self.yaw_filter_coeffs )
+            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )                                
         elif c == ']':
             self.thrust.increase()
             self.rc_changed = True
@@ -161,15 +161,14 @@ def rxCallback(packet):
     global telem, coord
     telem.processPacket(packet)
     coord.processPacket(packet)
-    
 def loop():
 
     global xb, telem, coord
 
-    DEFAULT_COM_PORT = 'COM7'
+    DEFAULT_COM_PORT = 'COM3'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
-    DEFAULT_PAN = 0x1001
+    DEFAULT_PAN = 0x1005
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT

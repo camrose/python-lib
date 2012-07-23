@@ -4,7 +4,7 @@ from serial import *
 from xbee import XBee
 from payload import Payload
 from dictionaries import *
-from commandinterface import CommandInterface
+from command_interface import CommandInterface
 from bams import *
 
 class TelemetryReader(object):
