@@ -336,9 +336,9 @@ def txCallback(dest, packet):
 # Standalone mode uses all default values
 if __name__ == '__main__':
 
-    DEFAULT_COM_PORT = 'COM21'
-    DEFAULT_BAUD_RATE = 115200
-    DEFAULT_ADDR = 0x1020
+    DEFAULT_COM_PORT = 'COM3'
+    DEFAULT_BAUD_RATE = 57600
+    DEFAULT_ADDR = 0x1021
     DEFAULT_UPDATE_RATE = 0.1 # Directory broadcast rate in hertz
     
     if len(sys.argv) == 1:

@@ -7,6 +7,7 @@ from serial import *
 from xbee import XBee
 from payload import Payload
 from telemetry_reader import TelemetryReader
+from network_coordinator import NetworkCoordinator
 from dictionaries import *
 from command_interface import CommandInterface
 
@@ -109,7 +110,7 @@ class VideoStreamer(object):
             col = raw[2]
             pixels = raw[3::]
                               
-            #print "Received row: " + str(row) + " col: " + str(col)
+            print "Received row: " + str(row) + " col: " + str(col) + " data len: " + str(len(pixels))
                               
             self.writeBlock(row, col, pixels)
             
@@ -134,19 +135,24 @@ class VideoStreamer(object):
         
     def writeBlock(self, row, col_start, data):
         #x = horizontal, y = vertical
-        x_start = col_start*self.hardware_col_subsample*self.scale
-        x_end = x_start + self.block_size*self.hardware_col_subsample*self.scale
+        x_start = col_start*self.hardware_col_subsample*2
+        x_end = x_start + (self.block_size)*self.hardware_col_subsample*2
         y_start = row*self.scale
         y_end = y_start + self.scale*self.hardware_row_subsample
+
+        print "x: " + str(x_start) + " to " + str(x_end) + " y: " + str(y_start) + " to " + str(y_end)
         
         for y in range(y_start, y_end):
             for x in range(x_start, x_end):
-                self.frame_array[x, y] = data[(x - x_start)/(self.hardware_col_subsample*self.scale)]
+                #print "x: " + str(x) + " y: " + str(y)
+                if y < 360:
+                    self.frame_array[x, y] = data[(x - x_start)/(self.hardware_col_subsample*2)]
             
         # Write indicator pixels        
         for y in range(y_start, y_end):
             for x in range(0, self.dx):
-                self.cframe_array[x, y] = 0x0000FF
+                if y < 360:
+                    self.cframe_array[x, y] = 0x0000FF
             
     def drawCentroid(self, centroid):
         x_start = centroid[0]*self.dx;
@@ -188,7 +194,7 @@ def txCallback(dest, packet):
     
 if __name__ == '__main__':
 
-    DEFAULT_COM_PORT = 'COM7'
+    DEFAULT_COM_PORT = 'COM3'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
     DEFAULT_PAN = 0x1005
@@ -205,15 +211,18 @@ if __name__ == '__main__':
     else:
         print "Wrong number of arguments. Must be: COM BAUD ADDR"
         sys.exit(1)
-        
-    streamer = VideoStreamer(txCallback)	
-    reader = TelemetryReader(addr, txCallback)
+        	
     coord = CommandInterface(addr, txCallback)
-    
+    #netw = NetworkCoordinator(txCallback)
+    coord.enableDebug()
+    #netw.resume()
+
+    streamer = VideoStreamer(txCallback)
     ser = Serial(port = com, baudrate = baud)
     xb = XBee(ser, callback = streamer.processPacket)
     print "Setting PAN ID to " + hex(DEFAULT_PAN)
     xb.at(command = 'ID', parameter = pack('>H', DEFAULT_PAN))
+
     
     streamer.setEndpoint(addr)    
     time.sleep(0.25)    
@@ -223,13 +232,17 @@ if __name__ == '__main__':
     
     prev_time = time.time()
     file_index = 0;
+
+    a_flag = 0;
     
     while True:
         try:
             curr_time = time.time()
             if(curr_time - prev_time) > 4.0:
-                coord.requestRawFrame()
-                streamer.decayIndicators()
+                if a_flag == 0:
+                    coord.requestRawFrame()
+                    streamer.decayIndicators()
+                a_flag = 0;
                 prev_time = curr_time
                 
             if msvcrt.kbhit():
@@ -251,7 +264,7 @@ if __name__ == '__main__':
            print "Exception: ", sys.exc_info()[0]
            break
             
-    time.sleep(0.25)
+    #time.sleep(0.25)
     streamer.close()
     xb.halt()
     ser.close()
