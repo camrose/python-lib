@@ -1,4 +1,4 @@
-import time, sys, msvcrt
+import time, sys, tty, termios
 from struct import *
 from serial import *
 from math import *
@@ -52,10 +52,10 @@ class KeyboardInterface(object):
         self.roll_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )    
         # Actuator state
         self.elevator = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.2 )
-        self.thrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.025 )
+        self.thrust = IncrementCounter( start_value = 0.0, range = (0.2, 0.0), increment = 0.025 ) #RESTORE upper limit
         self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.05 )        
         # PID constants        
-        self.yaw_coeffs = [ 0.0,    0.0,    -2.0,   -0.8,    -0.4,    1.0,    1.0] # For steer Ki 0.8
+        self.yaw_coeffs = [ 0.0,    0.0,    -2.0,   -0.8,    -0.2\4,    1.0,    1.0] # For steer Ki 0.8
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator
         self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust 
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
@@ -64,18 +64,19 @@ class KeyboardInterface(object):
         self.streaming = False
         self.rate_control = False
         self.rc_changed = False
-        self.offsets_changed = False
+        self.offset_changed = False
         self.ref_changed = False
         self.rate_changed = False    
         self.pinging = False        
         
     def process(self, c):
     
-        if c != None:
+        if(c != None):
             self.__handleKey(c)
-            
-        if self.pinging:
-            self.comm.sendPing();                
+        
+        # TODO: Add the pinging functionality back in    
+        #if self.pinging:
+        #    self.comm.sendPing();                
             
     def __handleKey(self, c):
             
@@ -185,10 +186,10 @@ def loop():
 
     global xb, telem, coord
 
-    DEFAULT_COM_PORT = 'COM3'
+    DEFAULT_COM_PORT = 'COM7'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
-    DEFAULT_PAN = 0x1005
+    DEFAULT_PAN = 0x1001
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT
@@ -222,14 +223,20 @@ def loop():
     
     while True:
 
-        try:
-            c = None
-            if( msvcrt.kbhit() ):
-               c = msvcrt.getch()
+        try:   
+            # Copied from code.activestate.com/recipes/134892/
+            # TODO: Find a way to avoid this blocking call
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            try:
+                tty.setraw(sys.stdin.fileno())
+                c = sys.stdin.read(1)
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)             
             kbint.process(c)
             time.sleep(0.01)
             #comm.sendPing()
-
+    
         except:        
             break
             
@@ -247,5 +254,6 @@ if __name__ == '__main__':
         print e
         
     finally:
-        #Add cleanup code!
+        #Add clean up code!
         pass
+        

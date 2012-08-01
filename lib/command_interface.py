@@ -36,6 +36,13 @@ class CommandInterface(object):
             print "Requesting gyro offsets..."
         pld = Payload(data = data_pack, status = 0, type = Commands['GET_GYRO_CALIB_PARAM'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def setTelemetrySubsample(self, period):
+        data_pack = pack('H', period)
+        if self.debugPrint:
+            print "Setting telemetry subsample period to " + str(period)
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_TELEM_SUBSAMPLE'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def startSensorDump(self, datasets):
         data_pack = pack('H', datasets)
@@ -71,6 +78,28 @@ class CommandInterface(object):
         if self.debugPrint:
             print "Capturing and setting background frame."
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_BACKGROUND_FRAME'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def rotateRefGlobal(self, rotation):
+        data_pack = pack(4*'f', *rotation)
+        if self.debugPrint:
+            print "Applying rotation to reference in global axes: " + str(rotation)
+        pld = Payload(data = data_pack, status = 0, type = Commands['ROTATE_REF_GLOBAL'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def rotateRefLocal(self, rotation):
+        data_pack = pack(4*'f', *rotation)
+        if self.debugPrint:
+            print "Applying rotation to reference in local axes: " + str(rotation)
+        pld = Payload(data = data_pack, status = 0, type = Commands['ROTATE_REF_LOCAL'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+        
+    def setRegulatorOffsets(self, offsets):
+        data_pack = pack(3*'f', *offsets)
+        if self.debugPrint:
+            print "Setting offsets to: " + str(offsets)
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_REGULATOR_OFFSETS'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def setRegulatorRef(self, ref):
@@ -141,11 +170,18 @@ class CommandInterface(object):
             print "Requesting telemetry data..."
         pld = Payload(data = data_pack, status = 0, type = Commands['REQUEST_TELEMETRY'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
-        
+    
     def sendPing(self):
         data_pack = pack('H', 0)
         if self.debugPrint:
             print "Pinging..."
+        pld = Payload(data = data_pack, status = 0, type = Commands['PING'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
+    def sendEcho(self):
+        data_pack = pack('H', 0)
+        if self.debugPrint:
+            print "Requesting echo..."
         pld = Payload(data = data_pack, status = 0, type = Commands['ECHO'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
@@ -183,8 +219,15 @@ class CommandInterface(object):
             print "Requesting attitude."
         pld = Payload(data = data_pack, status = 0, type = Commands['REQUEST_ATTITUDE'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
-        
+
+    def setSlewLimit(self, limit):
+        data_pack = pack('f', limit)
+        if self.debugPrint:
+            print "Setting slew rate limit to: " + str(limit) + " radians/sec."
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_SLEW_LIMIT'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+                
     def processPacket(self, packet):
-        print "Hi!"
+        print "Command interface objects don't need to process packets."
         pass
     

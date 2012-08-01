@@ -52,9 +52,12 @@ RegulatorStates = {
 }
 
 Commands = {	
-    
-    'ECHO':0x1F,      # send back the received packet
+    'PING':0x12,
+    'ECHO':0x13,      # send back the received packet
 
+    'ROTATE_REF_GLOBAL':0x18,
+    'ROTATE_REF_LOCAL':0x19,
+    'SET_REGULATOR_OFFSETS':0x20,
 	'SET_REGULATOR_MODE':0x21,
 	'SET_REGULATOR_REF':0x22,
 	'SET_REGULATOR_PID':0x23,
@@ -99,4 +102,6 @@ Commands = {
     
     'REQUEST_ATTITUDE':0x50,
     'RESPONSE_ATTITUDE':0x51,
+    'SET_TELEM_SUBSAMPLE':0x52,
+    'SET_SLEW_LIMIT':0x53,
 }
