@@ -169,15 +169,18 @@ def loop():
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
     DEFAULT_PAN = 0x1005
+    DEFAULT_CHANNEL = 0x12
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT
         baud = DEFAULT_BAUD_RATE
         addr = DEFAULT_ADDRESS
+        chan = DEFAULT_CHANNEL
     elif len(sys.argv) == 4:
         com = sys.argv[1]
         baud = int(sys.argv[2])
         addr = pack('>H', int(sys.argv[3], 16))
+        chan = DEFAULT_CHANNEL
     else:
         print "Wrong number of arguments. Must be: COM BAUD ADDR"
         sys.exit(1)
