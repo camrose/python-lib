@@ -104,4 +104,6 @@ Commands = {
     'RESPONSE_ATTITUDE':0x51,
     'SET_TELEM_SUBSAMPLE':0x52,
     'SET_SLEW_LIMIT':0x53,
+    
+    'TOGGLE_STREAMING':0x54,
 }

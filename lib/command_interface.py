@@ -226,6 +226,13 @@ class CommandInterface(object):
             print "Setting slew rate limit to: " + str(limit) + " radians/sec."
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_SLEW_LIMIT'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def toggleStreaming(self):
+        data_pack = pack('L', 0)
+        if self.debugPrint:
+            print "Toggling telemetry streaming."
+        pld = Payload(data = data_pack, status = 0, type = Commands['TOGGLE_STREAMING'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
                 
     def processPacket(self, packet):
         print "Command interface objects don't need to process packets."

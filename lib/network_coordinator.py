@@ -35,7 +35,7 @@ BROADCAST_ADDRESS = '\xFF\xFF'
 class NetworkCoordinator(object):
 
     client_entry_template = {'UUID':0, 'Status':'Closed', 'Transaction ID':0,
-        'Address':"\x00\x00", 'PAN':"\x00\x00", 'Channel':"\x15", 
+        'Address':"\x00\x00", 'PAN':"\x00\x00", 'Channel':"\x12", 
         'Basestation Address':"\x00\x00", 'Basestation Pan':"\x00\x00",
         'Timestamp':0}
     client_statuses = ['Offer Sent', 'Assigned', 'Assigned to Other', 'Closed']

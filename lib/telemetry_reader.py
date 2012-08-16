@@ -42,8 +42,8 @@ class TelemetryReader(object):
             self.file.write("Ref\t\t\t")            
             self.file.write("Pose\t\t\t")            
             self.file.write("Err\t\t\t")            
-            self.file.write("U\t\t\t")
-            self.file.write("ED\tRSSI\n")
+            self.file.write("U\n")
+            #self.file.write("ED\tRSSI\n")
             
     def writeLine(self, str):
         if(self.file != None):
@@ -135,19 +135,20 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 66):
+            if(len(data) != 64):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
                 
-            raw = unpack('4f4f4f3fL2B', data)
+            raw = unpack('4f4f4f3fL', data)
+            #raw = unpack('4f4f4f3fL2B', data)
             
             ref = raw[0:4]
             x = raw[4:8]
             err = raw[8:12]
             u = raw[12:15]
             timestamp = raw[15]
-            ed = raw[16]
-            rssi = raw[17]
+            #ed = raw[16]
+            #rssi = raw[17]
             # timestamp = raw[0]
             # ref = raw[1:5]
             # x = raw[5:9]
@@ -164,7 +165,7 @@ class TelemetryReader(object):
                         str(degrees(euler[1])) + " Roll: " + str(degrees(euler[2]))
                 print "Err: " + str(err)
                 print "U: " + str(u)
-                print "ED: " + str(ed) + " RSSI: " + str(rssi)               
+                #print "ED: " + str(ed) + " RSSI: " + str(rssi)               
                 
             if(self.fprint == True):
                 self.file.write(str(timestamp) + "\t")
@@ -175,8 +176,8 @@ class TelemetryReader(object):
                 self.file.write(str(err[0]) + "\t" + str(err[1]) + "\t" + \
                                 str(err[2]) + "\t" + str(err[3]) + "\t")
                 self.file.write(str(u[0]) + "\t" + str(u[1]) + "\t" + \
-                                str(u[2]) + "\t")
-                self.file.write(str(ed) + "\t" + str(rssi) + "\n")
+                                str(u[2]) + "\n")
+                #self.file.write(str(ed) + "\t" + str(rssi) + "\n")
                 
         elif type == Commands['RESPONSE_ATTITUDE']:
             if(len(data) != 16):

@@ -1,8 +1,8 @@
-import time, sys
+import time, sys, msvcrt
 from struct import *
 from serial import *
 from xbee import XBee
-from lib import network_const
+#from lib import network_const
 from lib.dictionaries import *
 from lib.command_interface import CommandInterface
 from lib.network_coordinator import NetworkCoordinator
@@ -24,20 +24,25 @@ def txCallback(dest, packet):
     
 def loop():
 
+    global xb, coord
+
     DEFAULT_COM_PORT = 'COM3'
     DEFAULT_BAUD_RATE = 57600
     DEFAULT_ADDRESS = '\x10\x21'
     DEFAULT_PAN = 0x1005
+    DEFAULT_CHANNEL = 0x12
     
     
     if len(sys.argv) == 1:
         com = DEFAULT_COM_PORT
         baud = DEFAULT_BAUD_RATE
         addr = DEFAULT_ADDRESS
+        chan = DEFAULT_CHANNEL
     elif len(sys.argv) == 4:
         com = sys.argv[1]
         baud = int(sys.argv[2])
         addr = pack('>H', int(sys.argv[3], 16))
+        chan = DEFAULT_CHANNEL
     else:
         print "Wrong number of arguments. Must be: COM BAUD ADDR"
         sys.exit(1)
@@ -47,19 +52,25 @@ def loop():
     
     ser = Serial(port = com, baudrate = baud) 
     xb = XBee(ser)
+    print "Setting CHANNEL to " + hex(chan)
+    xb.at(command = 'CH', parameter = pack('>H', chan))
     print "Setting PAN ID to " + hex(DEFAULT_PAN)
-    xb.at(command = 'ID', parameter = pack('>H', DEFAULT_PAN))         
+    xb.at(command = 'ID', parameter = pack('>H', DEFAULT_PAN))
+
+   # comm = NetworkCoordinator(txCallback)
     
     thrust = 0.0
     yaw = 0.0
     elevator = 0.0
+    coord.setRegulatorMode(RegulatorStates['Remote Control'])
     
     while True:
         
         try:                    
+
             
             c = msvcrt.getch()
-            
+
             if c == 'w':
                 thrust = thrust + THRUST_INCREMENT
             elif c == 'a':
@@ -97,6 +108,7 @@ def loop():
                 elevator = ELEVATOR_LOWER_LIMIT
             
             coord.setRemoteControlValues(thrust, yaw, elevator)
+            
             
         except:
         

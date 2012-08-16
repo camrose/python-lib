@@ -55,7 +55,7 @@ class KeyboardInterface(object):
         self.thrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.025 )
         self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.05 )        
         # PID constants        
-        self.yaw_coeffs = [ 0.0,    0.0,    -2.0,   -0.8,    -0.4,    1.0,    1.0] # For steer Ki 0.8
+        self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0] # For steer Ki 0.8
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator
         self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust 
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
@@ -117,7 +117,8 @@ class KeyboardInterface(object):
             self.comm.requestTelemetry()        
         elif c == 'y':
             self.streaming = not self.streaming
-            #telem.writeLine("-> Toggle Streaming\n")                
+            telem.writeLine("-> Toggle Streaming\n")
+            self.comm.toggleStreaming()
         # Regulator Modes
         elif c == '1':                
             self.comm.setRegulatorMode(RegulatorStates['Off'])
