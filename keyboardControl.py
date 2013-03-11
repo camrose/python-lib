@@ -8,7 +8,7 @@ from lib.command_interface import CommandInterface
 from lib.network_coordinator import NetworkCoordinator
 
 THRUST_INCREMENT = 0.05
-YAW_INCREMENT = -0.5
+YAW_INCREMENT = -0.1
 ELEVATOR_INCREMENT = 0.2
 
 THRUST_UPPER_LIMIT = 1.0

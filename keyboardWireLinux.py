@@ -44,7 +44,7 @@ class KeyboardInterface(object):
         self.comm = comm_interface
         # Attitude state
         self.yaw = IncrementCounter( start_value = 0.0, range = (180.0, -180.0), increment = 45.0 )
-        self.pitch = IncrementCounter( start_value = 0.0, range = (90.0, -90.0), increment = 10.0 )    
+        self.pitch = IncrementCounter( start_value = 70.0, range = (90.0, -90.0), increment = 10.0 )    
         self.roll = IncrementCounter( start_value = 0.0, range = (180.0, -180.0), increment = 10.0)
         # Slew state
         self.yaw_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )
