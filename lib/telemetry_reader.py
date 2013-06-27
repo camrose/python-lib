@@ -135,18 +135,19 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 64):
+            if(len(data) != 68):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
                 
-            raw = unpack('4f4f4f3fL', data)
+            raw = unpack('4f4f4f3f2hL', data)
             #raw = unpack('4f4f4f3fL2B', data)
             
             ref = raw[0:4]
             x = raw[4:8]
             err = raw[8:12]
             u = raw[12:15]
-            timestamp = raw[15]
+            bemf = raw[15:17]
+            timestamp = raw[17]
             #ed = raw[16]
             #rssi = raw[17]
             # timestamp = raw[0]
@@ -165,6 +166,7 @@ class TelemetryReader(object):
                         str(degrees(euler[1])) + " Roll: " + str(degrees(euler[2]))
                 print "Err: " + str(err)
                 print "U: " + str(u)
+                print "BEMF: " + str(bemf)
                 #print "ED: " + str(ed) + " RSSI: " + str(rssi)               
                 
             if(self.fprint == True):
@@ -176,7 +178,9 @@ class TelemetryReader(object):
                 self.file.write(str(err[0]) + "\t" + str(err[1]) + "\t" + \
                                 str(err[2]) + "\t" + str(err[3]) + "\t")
                 self.file.write(str(u[0]) + "\t" + str(u[1]) + "\t" + \
-                                str(u[2]) + "\n")
+                                str(u[2]) + "\t")
+                self.file.write(str(bemf[0]) + "\t" + str(bemf[1]) + "\t" + \
+                                "\n")
                 #self.file.write(str(ed) + "\t" + str(rssi) + "\n")
                 
         elif type == Commands['RESPONSE_ATTITUDE']:

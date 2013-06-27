@@ -86,15 +86,15 @@ class KeyboardInterface(object):
         if c == 'w':
             self.elevator.increase()
             self.offsets_changed = True 
-            #self.pitch.increase()
+            # self.pitch.increase()
             # self.comm.rotateRefLocal(quatGenerate(radians(10), (0,1,0)))
-            #self.ref_changed = True
+            # self.ref_changed = True
         elif c == 's':
             self.elevator.decrease()
             self.offsets_changed = True 
-            #self.pitch.decrease()
-            # self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
-            #self.ref_changed = True
+            # self.pitch.decrease()
+            #self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
+            # self.ref_changed = True
         elif c == 'a':
             # self.yaw.decrease()
             # self.rot_changed = True
