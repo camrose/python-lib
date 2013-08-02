@@ -55,6 +55,8 @@ Commands = {
     'PING':0x12,
     'ECHO':0x13,      # send back the received packet
 
+    'STOP_WINGS':0x15,
+    'CALIB_WINGS':0x16,
     'SET_TEMP_ROT':0x17,
     'ROTATE_REF_GLOBAL':0x18,
     'ROTATE_REF_LOCAL':0x19,

@@ -80,6 +80,27 @@ class CommandInterface(object):
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_BACKGROUND_FRAME'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
 
+    def calibWings(self):
+        data_pack = pack('H', 0)
+        if self.debugPrint:
+            print "Calibrating crank position estimate."
+        pld = Payload(data = data_pack, status = 0, type = Commands['CALIB_WINGS'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def setWingStop(self, flag):        
+        data_pack = pack('B', flag)
+        if self.debugPrint:
+            if flag == 0:
+                print "Setting wings to flap."
+            elif flag == 1:
+                print "Setting wings to stop closed."
+            elif flag == 2:
+                print "Setting wings to stop open (not supported yet)."
+            else:
+                print "Incorrrect wing behavior."
+        pld = Payload(data = data_pack, status = 0, type = Commands['STOP_WINGS'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
     def setTempRot(self, rotation):
         data_pack = pack(4*'f', *rotation)
         if self.debugPrint:

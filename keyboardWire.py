@@ -127,7 +127,7 @@ class KeyboardInterface(object):
         elif c == 'f':                
             self.comm.startSensorDump(0)
         elif c == 'v':
-            self.comm.requestDumpData(0x80 + 0, 0x80 + 600, 68)            
+            self.comm.requestDumpData(0x80 + 0, 0x80 + 4096, 72)            
         elif c == 't':
             self.comm.requestTelemetry()        
         elif c == 'y':
@@ -143,7 +143,11 @@ class KeyboardInterface(object):
             self.comm.setRegulatorMode(RegulatorStates['Remote Control'])                    
         elif c == '4':
             self.rate_control = not self.rate_control           
-            self.comm.setRateMode(self.rate_control)                        
+            self.comm.setRateMode(self.rate_control)
+        elif c == '5':
+            self.comm.calibWings()
+        elif c == '6':
+            self.comm.setWingStop(1)
         elif c == '0':
             #self.pinging = not self.pinging
             self.comm.setRegulatorRef((1.0, 0.0, 0.0, 0.0))
