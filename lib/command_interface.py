@@ -261,7 +261,49 @@ class CommandInterface(object):
             print "Toggling telemetry streaming."
         pld = Payload(data = data_pack, status = 0, type = Commands['TOGGLE_STREAMING'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
-                
+
+    def setVelProfile(self, profile, num_setpoints):
+        data_pack = pack(num_setpoints*'3h', *profile)
+        if self.debugPrint:
+            print ("Setting vel profile to: \n" + \
+                    "Delta: " + str(profile[0:num_setpoints]) + "\n" + \
+                    "Interval: " + str(profile[num_setpoints:2*num_setpoints]) + "\n" + \
+                    "Vel: " + str(profile[2*num_setpoints:3*num_setpoints]))
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_VEL_PROFILE'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def setHallGains(self, gains):
+        data_pack = pack('5f', *gains)
+        if self.debugPrint:
+            print ("Setting hall PID coefficents to: \n" + \
+                    "\tKp Ki Kd Kaw Kff" + "\n" + \
+                    "Coeffs: " + str(gains[0:5]))
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_HALL_GAINS'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def setHallThrust(self, thrust, time):
+        data_pack = pack('HH', thrust, time)
+        if self.debugPrint:
+            print ("Setting hall thrust to " + \
+                    str(thrust) + " for " + str(time) + \
+                    "ms")
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_HALL_INPUT'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def hallPIDOn(self):
+        data_pack = pack('L', 0)
+        if self.debugPrint:
+            print "Starting hall thrust control."
+        pld = Payload(data = data_pack, status = 0, type = Commands['HALL_PID_ON'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+
+    def toggleFigureEight(self, flag):
+        data_pack = pack('B', flag)
+        if self.debugPrint:
+            print "Turning on figure eight: " + str(flag)
+        pld = Payload(data = data_pack, status = 0, type = Commands['TOGGLE_FIGURE_EIGHT'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+                    
     def processPacket(self, packet):
         print "Command interface objects don't need to process packets."
         pass

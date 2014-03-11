@@ -48,6 +48,7 @@ RegulatorStates = {
     'Off':0,
     'Stabilize':1,
     'Remote Control':2,
+    'Track Hall':3,
 
 }
 
@@ -109,4 +110,9 @@ Commands = {
     'SET_SLEW_LIMIT':0x53,
     
     'TOGGLE_STREAMING':0x54,
+    'SET_VEL_PROFILE':0x55,
+    'SET_HALL_GAINS':0x56,
+    'SET_HALL_INPUT':0x57,
+    'HALL_PID_ON': 0x58,
+    'TOGGLE_FIGURE_EIGHT': 0x59,
 }
