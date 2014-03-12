@@ -127,7 +127,7 @@ class KeyboardInterface(object):
         elif c == 'f':                
             self.comm.startSensorDump(0)
         elif c == 'v':
-            self.comm.requestDumpData(0x80 + 0, 0x80 + 600, 72)            
+            self.comm.requestDumpData(0x80 + 0, 0x80 + 7000, 44)            
         elif c == 't':
             self.comm.requestTelemetry()        
         elif c == 'y':

@@ -39,10 +39,9 @@ class TelemetryReader(object):
     def writeHeader(self):
         if(self.file != None):
             self.file.write("Timestamp\t")
-            self.file.write("Ref\t\t\t")            
             self.file.write("Pose\t\t\t")            
-            self.file.write("Err\t\t\t")            
-            self.file.write("U\n")
+            self.file.write("Gyro\t\t")            
+            self.file.write("Accel\n")            
             #self.file.write("ED\tRSSI\n")
             
     def writeLine(self, str):
@@ -135,21 +134,27 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 72):
+            if(len(data) != 44):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
 
             
-            raw = unpack('4f4f4f3f2hfL', data)
+            raw = unpack('4f3f3fL', data)
             #raw = unpack('4f4f4f3fL2B', data)
             
-            ref = raw[0:4]
-            x = raw[4:8]
-            err = raw[8:12]
-            u = raw[12:15]
-            bemf = raw[15:17]
-            crank = raw[17:18]
-            timestamp = raw[18]
+            #ref = raw[0:4]
+            #x = raw[4:8]
+            #err = raw[8:12]
+            #u = raw[12:15]
+            #bemf = raw[15:17]
+            #crank = raw[17:18]
+            #timestamp = raw[18]
+
+            x = raw[0:4]
+            gyro = raw[4:7]
+            accel = raw[7:10]
+            timestamp = raw[10]
+            
             #ed = raw[16]
             #rssi = raw[17]
             # timestamp = raw[0]
@@ -162,30 +167,24 @@ class TelemetryReader(object):
             
             if(self.cprint == True):
                 print "Timestamp: " + str(timestamp)
-                print "Ref: " + str(ref)
+                #print "Ref: " + str(ref)
                 print "X: " + str(x)                
                 print "X Euler Yaw: " + str(degrees(euler[0])) + " Pitch: " + \
                         str(degrees(euler[1])) + " Roll: " + str(degrees(euler[2]))
-                print "Err: " + str(err)
-                print "U: " + str(u)
-                print "BEMF: " + str(bemf)
-                print "Crank angle: " + str(crank[0])
+                #print "Err: " + str(err)
+                #print "U: " + str(u)
+                #print "BEMF: " + str(bemf)
+                #print "Crank angle: " + str(crank[0])
                 #print "ED: " + str(ed) + " RSSI: " + str(rssi)               
                 
             if(self.fprint == True):
                 self.file.write(str(timestamp) + "\t")
-                self.file.write(str(ref[0]) + "\t" + str(ref[1]) + "\t" + \
-                                str(ref[2]) + "\t" + str(ref[3]) + "\t")
                 self.file.write(str(x[0]) + "\t" + str(x[1]) + "\t" + \
                                 str(x[2]) + "\t" + str(x[3]) + "\t")                
-                self.file.write(str(err[0]) + "\t" + str(err[1]) + "\t" + \
-                                str(err[2]) + "\t" + str(err[3]) + "\t")
-                self.file.write(str(u[0]) + "\t" + str(u[1]) + "\t" + \
-                                str(u[2]) + "\t")
-                self.file.write(str(bemf[0]) + "\t" + str(bemf[1]) + \
-                                "\t")
-                self.file.write(str(crank[0]) + \
-                                "\n")
+                self.file.write(str(gyro[0]) + "\t" + str(gyro[1]) + "\t" + \
+                                str(gyro[2]) + "\t")
+                self.file.write(str(accel[0]) + "\t" + str(accel[1]) + "\t" + \
+                                str(accel[2]) + "\n")
                 #self.file.write(str(ed) + "\t" + str(rssi) + "\n")
                 
         elif type == Commands['RESPONSE_ATTITUDE']:
