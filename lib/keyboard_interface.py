@@ -6,41 +6,44 @@ from struct import *
 from serial import *
 from math import *
 from increment_counter import IncrementCounter
-from lib.dictionaries import *
-from increment_counter import CircleCounter
+from dictionaries import *
 
 class KeyboardInterface(object):
     
-    def __init__(self, comm_interface = None):
+    def __init__(self, comm_interface = None, hall_interface = None):
+        
         self.comm = comm_interface
+        self.hall = hall_interface
+        
         # Attitude state
-        self.yaw = CircleCounter( start_value = 0.0, increment = 60.0, modulo = 360.0 )
+        self.yaw = IncrementCounter( start_value = 0.0, range = (180.0, -180.0), increment = 60.0 )
         self.pitch = IncrementCounter( start_value = 0.0, range = (90.0, -90.0), increment = 10.0 )    
         self.roll = IncrementCounter( start_value = 0.0, range = (180.0, -180.0), increment = 10.0)
+        
         # Slew state
         self.yaw_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )
         self.pitch_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )
-        self.roll_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )    
+        self.roll_rate = IncrementCounter( start_value = 0.0, range = (10.0, -10.0), increment = 0.25 )
+        
         # Actuator state
         self.elevator = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.2 )
         self.thrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.05 )
-        self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.25 )        
+        self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.25 )
+        
         # PID constants        
         self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0] # For steer Ki 0.8
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator
-        #self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust
         #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator
         self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust 
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
-        # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
+
         # State                               
         self.streaming = False
         self.rate_control = False
         self.rc_changed = False
         self.offsets_changed = False
         self.ref_changed = False
-        self.rate_changed = False
-        self.rot_changed = False
+        self.rate_changed = Fals
         self.pinging = False        
         
     def process(self, c):
@@ -55,35 +58,27 @@ class KeyboardInterface(object):
             
         # Reference commands
         if c == 'w':
-            self.elevator.increase()
-            self.offsets_changed = True 
-            # self.pitch.increase()
-            # self.comm.rotateRefLocal(quatGenerate(radians(10), (0,1,0)))
-            # self.ref_changed = True
+            # self.elevator.increase()
+            # self.offsets_changed = True 
+            self.pitch.increase()
+            self.ref_changed = True
         elif c == 's':
-            self.elevator.decrease()
-            self.offsets_changed = True 
-            # self.pitch.decrease()
-            #self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
-            # self.ref_changed = True
+            # self.elevator.decrease()
+            # self.offsets_changed = True 
+            self.pitch.decrease()
+            self.ref_changed = True
         elif c == 'a':
             # self.yaw.decrease()
-            # self.rot_changed = True
             # self.ref_changed = True
-            # self.comm.rotateRefGlobal(quatGenerate(radians(-10), (0,0,1)))
             self.yaw_rate.decrease()                
             self.rate_changed = True
-            
             # self.steer.decrease()
             # self.rc_changed = True
         elif c == 'd':
             # self.yaw.increase()
-            # self.rot_changed = True
             # self.ref_changed = True
-            # self.comm.rotateRefGlobal(quatGenerate(radians(10), (0,0,1)))
             self.yaw_rate.increase()            
             self.rate_changed = True
-            
             # self.steer.increase()
             # self.rc_changed = True
         elif c == 'q':
@@ -109,7 +104,8 @@ class KeyboardInterface(object):
         elif c == '1':                
             self.comm.setRegulatorMode(RegulatorStates['Off'])
         elif c == '2':                
-            self.comm.setRegulatorMode(RegulatorStates['Stabilize'])
+            # self.comm.setRegulatorMode(RegulatorStates['Stabilize'])
+            self.comm.setRegulatorMode(RegulatorStates['Track Hall'])
         elif c == '3':                
             self.comm.setRegulatorMode(RegulatorStates['Remote Control'])                    
         elif c == '4':
@@ -120,9 +116,10 @@ class KeyboardInterface(object):
         elif c == '6':
             self.comm.setWingStop(1)
         elif c == '0':
-            #self.pinging = not self.pinging
-            self.comm.setRegulatorRef((1.0, 0.0, 0.0, 0.0))
-            
+            # self.pinging = not self.pinging
+            # self.comm.setRegulatorRef((1.0, 0.0, 0.0, 0.0))
+            self.comm.setSlewLimit(4.0)
+            self.comm.toggleFigureEight(1)
         # Attitude
         elif c == 'c':
             self.comm.runGyroCalib(1000);            
@@ -132,15 +129,20 @@ class KeyboardInterface(object):
         elif c == 'p':                
             self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )                                
             self.comm.setRegulatorRateFilter( self.yaw_filter_coeffs )
+            self.comm.setHallGains([5,0.2,100,0,900])
             self.comm.setTelemetrySubsample(1)
         elif c == ']':
-            self.thrust.increase()
-            self.rc_changed = True 
-            self.offsets_changed = True                        
+            # self.thrust.increase()
+            # self.rc_changed = True 
+            # self.offsets_changed = True
+            self.hall.thrust.increase()
+            self.freq_changed = True
         elif c == '[':
-            self.thrust.decrease()
-            self.rc_changed = True 
-            self.offsets_changed = True            
+            # self.thrust.decrease()
+            # self.rc_changed = True 
+            # self.offsets_changed = True
+            self.hall.thrust.decrease()
+            self.freq_changed = True
         elif c == '\x1b': #Esc key
             #break
             raise Exception('Exit')

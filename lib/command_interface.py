@@ -303,6 +303,27 @@ class CommandInterface(object):
             print "Turning on figure eight: " + str(flag)
         pld = Payload(data = data_pack, status = 0, type = Commands['TOGGLE_FIGURE_EIGHT'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def startLS(self, flag):
+        data_pack = pack('B', flag)
+        if self.debugPrint:
+            print "Turning line sensor: " + str(flag)
+        pld = Payload(data = data_pack, status = 0, type = Commands['LS_START'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def requestLineFrames(self):
+        data_pack = pack('H', 0)
+        if self.debugPrint:
+            print "Requesting line sensor frame"
+        pld = Payload(data = data_pack, status = 0, type = Commands['LINE_FRAME_REQUEST'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def setExposure(self, et, fs):
+        data_pack = pack('HH', et, fs)
+        if self.debugPrint:
+            print "Setting line sensor exposure time to exp: " + str(et) + ", freq: " + str(fs)
+        pld = Payload(data = data_pack, status = 0, type = Commands['LINE_SET_EXPOSURE'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
                     
     def processPacket(self, packet):
         print "Command interface objects don't need to process packets."

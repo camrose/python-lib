@@ -56,9 +56,9 @@ class KeyboardInterface(object):
         self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.25 )        
         # PID constants        
         self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0] # For steer Ki 0.8
-        #self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator
+        self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator
         #self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust
-        self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator
+        #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator
         self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust 
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
@@ -84,17 +84,17 @@ class KeyboardInterface(object):
             
         # Reference commands
         if c == 'w':
-            self.elevator.increase()
-            self.offsets_changed = True 
-            # self.pitch.increase()
+            #self.elevator.increase()
+            #self.offsets_changed = True 
+            self.pitch.increase()
             # self.comm.rotateRefLocal(quatGenerate(radians(10), (0,1,0)))
-            # self.ref_changed = True
+            self.ref_changed = True
         elif c == 's':
-            self.elevator.decrease()
-            self.offsets_changed = True 
-            # self.pitch.decrease()
+            #self.elevator.decrease()
+            #self.offsets_changed = True 
+            self.pitch.decrease()
             #self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
-            # self.ref_changed = True
+            self.ref_changed = True
         elif c == 'a':
             # self.yaw.decrease()
             # self.rot_changed = True
@@ -131,9 +131,14 @@ class KeyboardInterface(object):
         elif c == 't':
             self.comm.requestTelemetry()        
         elif c == 'y':
-            self.streaming = not self.streaming
-            telem.writeLine("-> Toggle Streaming\n")
-            self.comm.toggleStreaming()
+            self.comm.startLS(1)
+            #self.streaming = not self.streaming
+            #telem.writeLine("-> Toggle Streaming\n")
+            #self.comm.toggleStreaming()
+        elif c == 'u':
+            self.comm.startLS(0)
+        elif c == 'i':
+            self.comm.requestLineFrames()
         # Regulator Modes
         elif c == '1':                
             self.comm.setRegulatorMode(RegulatorStates['Off'])

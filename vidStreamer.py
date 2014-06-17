@@ -11,7 +11,39 @@ from lib.telemetry_reader import TelemetryReader
 from lib.network_coordinator import NetworkCoordinator
 from lib.dictionaries import *
 from lib.command_interface import CommandInterface
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
+from collections import deque
 
+class IncrementCounter(object):
+    
+    def __init__(self, start_value = 0, range = (-1.0, 1.0), increment = 0.1):
+        self.val = start_value
+        self.lower_bound = min(range)
+        self.upper_bound = max(range)
+        self.increment = increment
+        
+    def value(self):
+        return self.val
+        
+    def increase(self):
+        self.val = self.val + self.increment
+        self.__enforceRange()
+        
+    def decrease(self):
+        self.val = self.val - self.increment
+        self.__enforceRange()
+        
+    def set(self, val):
+        self.val = val
+        self.__enforceRange()
+        
+    def __enforceRange(self):
+        if self.val > self.upper_bound:
+            self.val = self.upper_bound
+        elif self.val < self.lower_bound:
+            self.val = self.lower_bound
 
 class WindowManager(threading.Thread):
     
@@ -50,15 +82,20 @@ class VideoStreamer(object):
         self.block_size = 75
 
         # Image Parameters
-        self.capture_width = 150
-        self.capture_height = 120
+        self.capture_width = 128
+        self.capture_height = 1
+        self.frame_cnt = 0
+        self.shown = 0
         
-        self.scale = 3
-        self.hardware_col_subsample = 2
-        self.hardware_row_subsample = 2
+        self.scale = 1
+        self.hardware_col_subsample = 1
+        self.hardware_row_subsample = 1
         
         self.dx = self.scale*self.hardware_col_subsample;
         self.dy = self.scale;
+        
+        self.x_vals = deque([0.0]*128)
+        self.y_vals = deque([0.0]*128)
         
         self.display_width = self.capture_width * self.scale        
         self.display_height = self.capture_height * self.scale        
@@ -68,19 +105,26 @@ class VideoStreamer(object):
         
         # Viewer window
         self.root = Tk()
-        self.stream = ImageView(self.root, width = self.display_width + self.dx, height = self.display_height)
+        self.stream = ImageView(self.root, width = self.display_width, height = 128)
         self.manager = WindowManager(self.root)
         self.manager.start()
+        self.line = []
         
-        self.frame = Image.new('L',(self.display_width, self.display_height))
-        self.cframe = Image.new('RGB',(self.display_width + self.dx, self.display_height))
+        self.frame = Image.new('L',(self.display_width, 128))
+        self.cframe = Image.new('L',(self.display_width, 128))
         self.frame_array = self.frame.load()
         self.cframe_array = self.cframe.load()
-        self.frame_draw = ImageDraw.Draw(self.cframe)
+        self.frame_draw = ImageDraw.Draw(self.frame)
 
         # Other state
         self.lastFrame = 0		
         self.lastFrameTime = time.clock()
+        plt.ion()
+        #plt.show()
+        
+        self.et = IncrementCounter( start_value = 501, range = (0, 2000), increment = 5 )
+        self.fs = IncrementCounter( start_value = 6000, range = (0, 100000), increment = 200 )
+        
         
         print("capture width: " + str(self.capture_width) + " height: " + str(self.capture_height))
         print("Display width: " + str(self.display_width) + " height: " + str(self.display_height))
@@ -102,19 +146,46 @@ class VideoStreamer(object):
         data = pld.data
         status = pld.status
 
-        if type == Commands['RAW_FRAME_RESPONSE']:
-            #print "Data len: " + str(len(data))
-            data_flag = str(self.block_size) + 'B'
+        if type == Commands['LINE_FRAME_RESPONSE']:
+            print "Data len: " + str(len(data))
+            data_flag = str((len(data)-6)) + 'B'
             raw = unpack('HHH' + data_flag, data)
 
             frame_num = raw[0]
             row = raw[1]*self.hardware_row_subsample
             col = raw[2]
             pixels = raw[3::]
+            print str(pixels) + '\n'
+            
+            #if (col == 75):
+            #    self.frame_cnt+=1
+            
+            #plt.plot(range(col,col+len(pixels)), pixels)
+            #shift = self.frame_cnt*128
+            ##if (self.shown == 0):
+            ##    self.shown = 1
+            ##    plt.show()
+            #a = data[(x_start-x_start):(x_end-x_start)]
+            #if(x_start == 0):
+            #    #b = [0,0,0,0,0,0,0,0,0,0]
+            #    #b.extend(a)
+            #    b = a
+            #    plt.plot(range(x_start+shift,x_end+shift), a)
+            #    #plt.axis([x_start+shift-1024,x_end+shift+1024,0,255])
+            #else:
+            #    b = a
+            #    plt.plot(range(x_start+shift,x_end+shift), a)
+            #    #plt.axis([x_start+shift-1024,x_end+shift+1024,0,255])
+            #plt.axis([0,2024,0,255])
+            #plt.draw()
+            
+            
+                                          
+            ##print "Received row: " + str(row) + " col: " + str(col)
+            #np.insert(self.px_vals,col,pixels)
+            #print self.px_vals
                               
-            #print "Received row: " + str(row) + " col: " + str(col)
-                              
-            self.writeBlock(row, col, pixels)
+            self.writeBlock(row, col, (len(data)-6), pixels)
             
         elif type == Commands['CENTROID_REPORT']:
             raw = unpack('4H2B', data)            
@@ -135,21 +206,50 @@ class VideoStreamer(object):
         print "Framerate: " + str(rate) + " fps\n"
         self.lastFrameTime = now
         
-    def writeBlock(self, row, col_start, data):
+    def writeBlock(self, row, col_start, to_go, data):
         #x = horizontal, y = vertical
         x_start = col_start*self.hardware_col_subsample*self.scale
-        x_end = x_start + self.block_size*self.hardware_col_subsample*self.scale
+        x_end = x_start + to_go*self.hardware_col_subsample*self.scale
         y_start = row*self.scale
-        y_end = y_start + self.scale
+        y_end = y_start + 127
         
+        print str(y_start)
+        print str(y_end)
+        print str(x_start)
+        print str(x_end)
         for y in range(y_start, y_end):
             for x in range(x_start, x_end):
+                #print str([x,y])
                 self.frame_array[x, y] = data[(x - x_start)/(self.hardware_col_subsample*self.scale)]
+                
+        
+        
             
-        # Write indicator pixels        
-        for y in range(y_start, y_end):
-            for x in range(0, self.dx):
-                self.cframe_array[x, y] = 0x0000FF
+        
+        #shift = self.frame_cnt*128 + self.frame_cnt*10
+        #a = data[(x_start-x_start):(x_end-x_start)]
+        #
+        #if(x_start == 0):
+        #    b = [0,0,0,0,0,0,0,0,0,0]
+        #    a.extend(a)
+        #    #b = a
+        #    plt.plot(range(x_start+shift,x_end+shift+10), b)
+        #    #plt.axis([x_start+shift-1024,x_end+shift+1024,0,255])
+        #else:
+        #    #b = [0,0,0,0,0,0,0,0,0,0]
+        #    #b.extend(a)
+        #    #b = a
+        #    plt.plot(range(x_start+shift+10,x_end+shift+10), a)
+        #    #plt.axis([x_start+shift-1024,x_end+shift+1024,0,255])
+        #plt.axis([0,2024,0,255])
+        #plt.draw()
+        #
+        #if (x_start == 75):
+        #    self.frame_cnt+=1
+        ## Write indicator pixels        
+        ##for y in range(y_start, y_end):
+        ##    for x in range(0, self.dx):
+        ##        self.cframe_array[x, y] = 0x0000FF
             
     def drawCentroid(self, centroid):
         x_start = centroid[0]*self.dx;
@@ -173,9 +273,25 @@ class VideoStreamer(object):
                     self.display_width + self.dx, self.display_height])        
             
     def updateImage(self):                
-        self.stream.setimage(self.cframe)      
+        self.stream.setimage(self.frame)
+        #print self.frame_array[0]
+        #plt.plot(range(0,128), self.line)
+        #plt.axis([0,2024,0,255])
+        #plt.draw()
+        
+              
     
     def decayIndicators(self):
+        for y in range(0, self.display_height - 1):            
+            for x in range(0, self.dx):            
+                pixel = self.cframe_array[x, y];                
+                if pixel >= (self.INDICATOR_DECAY,0,0):
+                    self.cframe_array[x, y] = (pixel[0] - self.INDICATOR_DECAY, 0, 0)
+                else:
+                    self.cframe_array[x, y] = (0, 0, 0)
+        self.updateImage()
+        
+    def showFrame(self):
         for y in range(0, self.display_height - 1):            
             for x in range(0, self.dx):            
                 pixel = self.cframe_array[x, y];                
@@ -238,13 +354,14 @@ if __name__ == '__main__':
     
     prev_time = time.time()
     file_index = 0;
+    start_stream = 0
     
     while True:
         try:
             curr_time = time.time()
-            if(curr_time - prev_time) > 0.5:
-                #comm.requestRawFrame()
-                #streamer.decayIndicators()
+            if ((curr_time - prev_time) > 1.5) and start_stream:
+                comm.requestLineFrames()
+                streamer.updateImage()
                 prev_time = curr_time;
                 
             if msvcrt.kbhit():
@@ -259,9 +376,34 @@ if __name__ == '__main__':
                     streamer.save(str(file_index))
                     print "Image captured."
                     file_index = file_index + 1
+                elif c == 'y':
+                    comm.startLS(1)
+                    #self.streaming = not self.streaming
+                    #telem.writeLine("-> Toggle Streaming\n")
+                    #self.comm.toggleStreaming()
+                elif c == 'u':
+                    comm.startLS(0)
                 elif c == 'r':
-                    comm.requestRawFrame()
-                    streamer.decayIndicators()
+                    if start_stream:
+                        start_stream = 0
+                    else:
+                        start_stream = 1
+                    #comm.requestLineFrames()
+                    #streamer.decayIndicators()
+                elif c == 's':
+                    comm.setExposure(streamer.et.value(), streamer.fs.value())
+                elif c == '1':
+                    streamer.fs.decrease()
+                    print "Freq: " + str(streamer.fs.value())
+                elif c == '2':
+                    streamer.fs.increase()
+                    print "Freq: " + str(streamer.fs.value())
+                elif c == '3':
+                    streamer.et.decrease()
+                    print "Exposure: " + str(streamer.et.value())
+                elif c == '4':
+                    streamer.et.increase()
+                    print "Exposure: " + str(streamer.et.value())
                 
             time.sleep(0.1)
                 
