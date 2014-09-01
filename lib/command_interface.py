@@ -138,13 +138,14 @@ class CommandInterface(object):
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
     def setRegulatorPid(self, coeffs):
-        data_pack = pack(3*'7f', *coeffs)
+        data_pack = pack(4*'7f', *coeffs)
         if self.debugPrint:
             print ("Setting PID coefficents to: \n" + \
                     "\tOffset Kp Ki Kd\n" + \
                     "Yaw: " + str(coeffs[1:5]) + "\n" + \
                     "Pitch: " + str(coeffs[8:12]) + "\n" + \
-                    "Roll: " + str(coeffs[15:19]))
+                    "Roll: " + str(coeffs[15:19]) + "\n" + \
+                    "Line: " + str(coeffs[22:26]))
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_REGULATOR_PID'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
@@ -337,6 +338,13 @@ class CommandInterface(object):
         if self.debugPrint:
             print "Tracking marker: " + str(flag)
         pld = Payload(data = data_pack, status = 0, type = Commands['TRACK_MARKER'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def foundMarker(self):
+        data_pack = pack('B', 0)
+        if self.debugPrint:
+            print "Found marker?"
+        pld = Payload(data = data_pack, status = 0, type = Commands['FOUND_MARKER_REQUEST'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
                     
     def processPacket(self, packet):

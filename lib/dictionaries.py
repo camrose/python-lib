@@ -123,4 +123,6 @@ Commands = {
     'LINE_EDGE_RESPONSE': 0x5F,
     
     'TRACK_MARKER': 0x4D,
+    'FOUND_MARKER_REQUEST': 0x4B,
+    'FOUND_MARKER_RESPONSE': 0x4E,
 }

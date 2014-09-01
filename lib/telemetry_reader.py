@@ -241,6 +241,14 @@ class TelemetryReader(object):
             
             if(self.cprint == True):
                 print("Commanded thrust: " + str(thrust) + " steer: " + str(steer) + "\n")
+        
+        elif type == Commands['FOUND_MARKER_RESPONSE']:
+            if (len(data) != 1):
+                print "Invalid MARKER_RESPONSE packet of length " + str(len(data))
+                return
+            raw = unpack('B', data)
+            if(self.cprint == True):
+                print("FOUND MARKER: " + str(raw[0]) + "\n")
             
         else:
             pass

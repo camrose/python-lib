@@ -425,6 +425,13 @@ class KeyboardInterface(object):
         self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust manual
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
+        
+        
+        self.line_coeffs = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0]
+        
+        
+        
+        
         # State                               
         self.streaming = False
         self.rate_control = False
@@ -542,10 +549,11 @@ class KeyboardInterface(object):
             self.comm.zeroEstimate()                                  
         # Configuration
         elif c == 'p':                
-            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )                                
+            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs + self.line_coeffs )                                
             self.comm.setRegulatorRateFilter( self.yaw_filter_coeffs )
             self.comm.setHallGains([5,0.2,100,0,900])
             self.comm.setTelemetrySubsample(1)
+            self.comm.setExposure(351, 10000)
         elif c == ']':
             self.hall.thrust.increase()
             self.freq_changed = True
@@ -671,9 +679,8 @@ def loop():
 
         try:
             curr_time = time.time()
-            if ((curr_time - prev_time) > 1.5) and start_stream:
-                comm.requestLineFrames()
-                streamer.updateImage()
+            if ((curr_time - prev_time) > 2.0) and start_stream:
+                comm.foundMarker()
                 prev_time = curr_time;
             c = None
             if( msvcrt.kbhit() ):

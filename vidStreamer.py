@@ -122,8 +122,8 @@ class VideoStreamer(object):
         plt.ion()
         #plt.show()
         
-        self.et = IncrementCounter( start_value = 501, range = (0, 2000), increment = 5 )
-        self.fs = IncrementCounter( start_value = 6000, range = (0, 100000), increment = 200 )
+        self.et = IncrementCounter( start_value = 351, range = (0, 2000), increment = 5 )
+        self.fs = IncrementCounter( start_value = 10000, range = (0, 100000), increment = 200 )
         
         
         print("capture width: " + str(self.capture_width) + " height: " + str(self.capture_height))
