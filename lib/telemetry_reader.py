@@ -134,34 +134,23 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 44):
+            if(len(data) != 76):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
 
             
-            raw = unpack('4f3f3fL', data)
+            raw = unpack('4f4f3h3h3fh6B2fL', data)
             #raw = unpack('4f4f4f3fL2B', data)
             
-            #ref = raw[0:4]
-            #x = raw[4:8]
-            #err = raw[8:12]
-            #u = raw[12:15]
-            #bemf = raw[15:17]
-            #crank = raw[17:18]
-            #timestamp = raw[18]
-
-            x = raw[0:4]
-            gyro = raw[4:7]
-            accel = raw[7:10]
-            timestamp = raw[10]
-            
-            #ed = raw[16]
-            #rssi = raw[17]
-            # timestamp = raw[0]
-            # ref = raw[1:5]
-            # x = raw[5:9]
-            # err = raw[9:13]
-            # u = raw[13:16]
+            ref = raw[0:4]
+            x = raw[4:8]
+            gyro = raw[8:11]
+            accel = raw[11:14]
+            u = raw[14:17]
+            counts = raw[17]
+            edges = raw[18:24]
+            marker = raw[24:26]
+            timestamp = raw[26]
             
             euler = quaternionToEuler(x)
             
@@ -179,12 +168,21 @@ class TelemetryReader(object):
                 
             if(self.fprint == True):
                 self.file.write(str(timestamp) + "\t")
+                self.file.write(str(ref[0]) + "\t" + str(ref[1]) + "\t" + \
+                                str(ref[2]) + "\t" + str(ref[3]) + "\t")
                 self.file.write(str(x[0]) + "\t" + str(x[1]) + "\t" + \
                                 str(x[2]) + "\t" + str(x[3]) + "\t")                
                 self.file.write(str(gyro[0]) + "\t" + str(gyro[1]) + "\t" + \
                                 str(gyro[2]) + "\t")
                 self.file.write(str(accel[0]) + "\t" + str(accel[1]) + "\t" + \
-                                str(accel[2]) + "\n")
+                                str(accel[2]) + "\t")
+                self.file.write(str(u[0]) + "\t" + str(u[1]) + "\t" + \
+                                str(u[2]) + "\t")
+                self.file.write(str(counts) + "\t")
+                self.file.write(str(marker[0]) + "\t" + str(marker[1]) + "\t")
+                self.file.write(str(edges[0]) + "\t" + str(edges[1]) + "\t" + \
+                                str(edges[2]) + "\t" + str(edges[3]) + "\t" + \
+                                str(edges[4]) + "\t" + str(edges[5]) + "\n")
                 #self.file.write(str(ed) + "\t" + str(rssi) + "\n")
                 
         elif type == Commands['RESPONSE_ATTITUDE']:

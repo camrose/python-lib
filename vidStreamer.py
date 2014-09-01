@@ -1,4 +1,4 @@
-import threading, time, sys, msvcrt
+import threading, time, sys, msvcrt, datetime
 from struct import *
 from Tkinter import *
 from PIL import Image, ImageDraw
@@ -141,21 +141,40 @@ class VideoStreamer(object):
         self.endpoint_addr = addr        
         
     def processPacket(self, packet):
+        
+        global dat, curr_line, line_num, st
+        
         pld = Payload(packet.get('rf_data'))
         type = pld.type
         data = pld.data
         status = pld.status
 
         if type == Commands['LINE_FRAME_RESPONSE']:
-            print "Data len: " + str(len(data))
+            #print "Data len: " + str(len(data))
             data_flag = str((len(data)-6)) + 'B'
             raw = unpack('HHH' + data_flag, data)
-
+            
             frame_num = raw[0]
             row = raw[1]*self.hardware_row_subsample
             col = raw[2]
             pixels = raw[3::]
-            print str(pixels) + '\n'
+            curr_time = time.time() - st
+            
+            #print 'Line:' + str(len(curr_line)) + ' ' + 'Pix:' + str(len(pixels)) + '\n'
+            if len(curr_line) == 0 and len(pixels) == 75:
+                curr_line.extend(pixels)
+            elif len(curr_line) == 0 and len(pixels) == 53:
+                curr_line = []
+            elif len(curr_line) == 75 and len(pixels) == 75:
+                curr_line = []
+            elif len(curr_line) == 75 and len(pixels) == 53:
+                curr_line.extend(pixels)
+            else:
+                print 'Fail'
+                
+            
+            #print 'Pixels:' + str(len(pixels)) + '\n'
+            #print str(pixels) + '\n'
             
             #if (col == 75):
             #    self.frame_cnt+=1
@@ -184,8 +203,35 @@ class VideoStreamer(object):
             ##print "Received row: " + str(row) + " col: " + str(col)
             #np.insert(self.px_vals,col,pixels)
             #print self.px_vals
-                              
-            self.writeBlock(row, col, (len(data)-6), pixels)
+            
+            if len(curr_line) == 128:
+                #print str(curr_line)
+                print str(line_num)
+                curr_line.extend([curr_time])
+                dat.append(curr_line)
+                self.writeBlock(row, 0, 128, curr_line)
+                curr_line = []
+                line_num = line_num + 1
+        
+        if type == Commands['LINE_EDGE_RESPONSE']:
+            #print "Data len: " + str(len(data))
+            data_flag = str((len(data)-6)) + 'B'
+            raw = unpack('LH' + data_flag, data)
+            
+            timestamp = raw[0]
+            frame_num = raw[1]
+            locs = raw[2::]
+            curr_time = time.time() - st
+            
+            print 'Locs:' + str(locs) + '\n'
+            curr_line = [0] * 128
+            for i in range(0,len(locs)):
+                if locs[i] != 0:
+                    curr_line[locs[i]] = 255
+            
+            print str(frame_num)
+            self.writeBlock(0,0,128,curr_line)
+            
             
         elif type == Commands['CENTROID_REPORT']:
             raw = unpack('4H2B', data)            
@@ -198,7 +244,7 @@ class VideoStreamer(object):
             
             
         else:
-            print "Invalid command: " + str(type)                                
+            print "Invdfhdfhalid command: " + str(type)                                
                         
     def displayFrameRate(self):
         now = time.clock()
@@ -307,7 +353,7 @@ def txCallback(dest, packet):
     
 if __name__ == '__main__':
 
-    global xb, telem, coord, comm
+    global xb, telem, coord, comm, dat, curr_line, line_num, st
     
     #DEFAULT_BAUD_RATE = 115200
 
@@ -356,10 +402,22 @@ if __name__ == '__main__':
     file_index = 0;
     start_stream = 0
     
+    today = datetime.datetime.today()
+    d = str(today.year) + "_" + str(today.month) + "_" + str(today.day)
+    t = str(today.hour) + "_" + str(today.minute) + "_" + str(today.second)
+    fname = d + '-' + t + '-' + 'line' + '.txt'
+    f = open(fname, 'w')
+    
+    dat = []
+    curr_line = []
+    line_num = 0
+    
+    st = time.time()
+    
     while True:
         try:
             curr_time = time.time()
-            if ((curr_time - prev_time) > 1.5) and start_stream:
+            if ((curr_time - prev_time) > 0.4) and start_stream:
                 comm.requestLineFrames()
                 streamer.updateImage()
                 prev_time = curr_time;
@@ -404,14 +462,28 @@ if __name__ == '__main__':
                 elif c == '4':
                     streamer.et.increase()
                     print "Exposure: " + str(streamer.et.value())
+                elif c == 'j':
+                    comm.requestLineFrames()
+                    streamer.updateImage()
+                elif c == 'k':
+                    comm.requestLineEdges()
+                    streamer.updateImage()
+                elif c == '\x1b': #Esc key
+                    raise Exception('Exit')
                 
-            time.sleep(0.1)
+            #time.sleep(0.1)
                 
-        except:
-           print "Exception: ", sys.exc_info()[0]
+        except Exception as e:
+           print e
            break
             
     time.sleep(0.25)
+    for row in dat:
+        row_str = str(row)
+        print row_str
+        f.write(row_str.strip('[]') + "\n")
+    f.close()
+    telem.close()
     streamer.close()
     xb.halt()
     ser.close()
