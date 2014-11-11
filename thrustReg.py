@@ -112,6 +112,7 @@ class KeyboardInterface(object):
         # PID constants        
         self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0] # For steer Ki 0.8
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator control
+        #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator control
         #self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust control
         #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator manual
         self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust manual
@@ -140,14 +141,14 @@ class KeyboardInterface(object):
             
         # Reference commands
         if c == 'w':
-            # self.elevator.increase()
-            # self.offsets_changed = True 
+            #self.elevator.increase()
+            #self.offsets_changed = True 
             self.pitch.increase()
             # self.comm.rotateRefLocal(quatGenerate(radians(10), (0,1,0)))
             self.ref_changed = True
         elif c == 's':
-            # self.elevator.decrease()
-            # self.offsets_changed = True 
+            #self.elevator.decrease()
+            #self.offsets_changed = True 
             self.pitch.decrease()
             #self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
             self.ref_changed = True
@@ -183,7 +184,7 @@ class KeyboardInterface(object):
         elif c == 'f':                
             self.comm.startSensorDump(0)
         elif c == 'v':
-            self.comm.requestDumpData(0x80 + 0, 0x80 + 600, 72)            
+            self.comm.requestDumpData(0x80 + 0, 0x80 + 7000, 64)            
         elif c == 't':
             self.comm.requestTelemetry()        
         elif c == 'y':

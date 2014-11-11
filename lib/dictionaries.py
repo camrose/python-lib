@@ -125,4 +125,5 @@ Commands = {
     'TRACK_MARKER': 0x4D,
     'FOUND_MARKER_REQUEST': 0x4B,
     'FOUND_MARKER_RESPONSE': 0x4E,
+    'SET_LINE_PID': 0x3A,
 }

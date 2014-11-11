@@ -427,7 +427,7 @@ class KeyboardInterface(object):
         # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
         
         
-        self.line_coeffs = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0]
+        self.line_coeffs = [63.5, 0.0, 2.0, 0.0, 0.0, 1.0, 1.0]
         
         
         
@@ -549,7 +549,8 @@ class KeyboardInterface(object):
             self.comm.zeroEstimate()                                  
         # Configuration
         elif c == 'p':                
-            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs + self.line_coeffs )                                
+            self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )
+            self.comm.setLinePid( self.line_coeffs )                                
             self.comm.setRegulatorRateFilter( self.yaw_filter_coeffs )
             self.comm.setHallGains([5,0.2,100,0,900])
             self.comm.setTelemetrySubsample(1)
@@ -652,7 +653,7 @@ def loop():
     telem.writeHeader()
     coord.resume()
     
-    comm.setSlewLimit(3.0)
+    comm.setSlewLimit(4.0)
     
     streamer.setEndpoint(addr)    
     time.sleep(0.25)

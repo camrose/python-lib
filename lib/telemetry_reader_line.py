@@ -134,12 +134,12 @@ class TelemetryReader(object):
                 
         elif type == Commands['RESPONSE_TELEMETRY']:
             
-            if(len(data) != 64):
+            if(len(data) != 76):
                 print "Invalid RESPONSE_TELEMETRY packet of length " + str(len(data))
                 return
 
             
-            raw = unpack('4f4f3h3h3f2hL', data)
+            raw = unpack('4f4f3h3h3fh6B2fL', data)
             #raw = unpack('4f4f4f3fL2B', data)
             
             ref = raw[0:4]
@@ -147,9 +147,10 @@ class TelemetryReader(object):
             gyro = raw[8:11]
             accel = raw[11:14]
             u = raw[14:17]
-            bemf = raw[17]
-            counts = raw[18]
-            timestamp = raw[19]
+            counts = raw[17]
+            edges = raw[18:24]
+            marker = raw[24:26]
+            timestamp = raw[26]
             
             euler = quaternionToEuler(x)
             
@@ -177,8 +178,11 @@ class TelemetryReader(object):
                                 str(accel[2]) + "\t")
                 self.file.write(str(u[0]) + "\t" + str(u[1]) + "\t" + \
                                 str(u[2]) + "\t")
-                self.file.write(str(bemf) + "\t")
-                self.file.write(str(counts) + "\n")
+                self.file.write(str(counts) + "\t")
+                self.file.write(str(marker[0]) + "\t" + str(marker[1]) + "\t")
+                self.file.write(str(edges[0]) + "\t" + str(edges[1]) + "\t" + \
+                                str(edges[2]) + "\t" + str(edges[3]) + "\t" + \
+                                str(edges[4]) + "\t" + str(edges[5]) + "\n")
                 #self.file.write(str(ed) + "\t" + str(rssi) + "\n")
                 
         elif type == Commands['RESPONSE_ATTITUDE']:
