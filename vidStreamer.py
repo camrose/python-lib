@@ -51,7 +51,7 @@ class VideoStreamer(object):
 
         # Image Parameters
         self.capture_width = 150
-        self.capture_height = 120
+        self.capture_height = 40
         
         self.scale = 3
         self.hardware_col_subsample = 2
@@ -111,6 +111,8 @@ class VideoStreamer(object):
             row = raw[1]*self.hardware_row_subsample
             col = raw[2]
             pixels = raw[3::]
+            
+            #print str(pixels)
                               
             #print "Received row: " + str(row) + " col: " + str(col)
                               
@@ -141,6 +143,7 @@ class VideoStreamer(object):
         x_end = x_start + self.block_size*self.hardware_col_subsample*self.scale
         y_start = row*self.scale
         y_end = y_start + self.scale
+        #y_end = 119*self.scale + self.scale
         
         for y in range(y_start, y_end):
             for x in range(x_start, x_end):
@@ -173,7 +176,7 @@ class VideoStreamer(object):
                     self.display_width + self.dx, self.display_height])        
             
     def updateImage(self):                
-        self.stream.setimage(self.cframe)      
+        self.stream.setimage(self.frame)      
     
     def decayIndicators(self):
         for y in range(0, self.display_height - 1):            
@@ -261,7 +264,8 @@ if __name__ == '__main__':
                     file_index = file_index + 1
                 elif c == 'r':
                     comm.requestRawFrame()
-                    streamer.decayIndicators()
+                    streamer.updateImage()
+                    #streamer.decayIndicators()
                 
             time.sleep(0.1)
                 
