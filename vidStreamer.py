@@ -55,7 +55,7 @@ class VideoStreamer(object):
         
         self.scale = 3
         self.hardware_col_subsample = 2
-        self.hardware_row_subsample = 2
+        self.hardware_row_subsample = 1
         
         self.dx = self.scale*self.hardware_col_subsample;
         self.dy = self.scale;
@@ -246,7 +246,8 @@ if __name__ == '__main__':
         try:
             curr_time = time.time()
             if(curr_time - prev_time) > 0.5:
-                #comm.requestRawFrame()
+                comm.requestRawFrame()
+                streamer.updateImage()
                 #streamer.decayIndicators()
                 prev_time = curr_time;
                 
