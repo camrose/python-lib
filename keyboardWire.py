@@ -96,22 +96,22 @@ class KeyboardInterface(object):
             #self.comm.rotateRefLocal(quatGenerate(radians(-10), (0,1,0)))
             # self.ref_changed = True
         elif c == 'a':
-            # self.yaw.decrease()
+            self.yaw.decrease()
             # self.rot_changed = True
-            # self.ref_changed = True
+            self.ref_changed = True
             # self.comm.rotateRefGlobal(quatGenerate(radians(-10), (0,0,1)))
-            self.yaw_rate.decrease()                
-            self.rate_changed = True
+            # self.yaw_rate.decrease()                
+            # self.rate_changed = True
             
             # self.steer.decrease()
             # self.rc_changed = True
         elif c == 'd':
-            # self.yaw.increase()
+            self.yaw.increase()
             # self.rot_changed = True
-            # self.ref_changed = True
+            self.ref_changed = True
             # self.comm.rotateRefGlobal(quatGenerate(radians(10), (0,0,1)))
-            self.yaw_rate.increase()            
-            self.rate_changed = True
+            #self.yaw_rate.increase()            
+            #self.rate_changed = True
             
             # self.steer.increase()
             # self.rc_changed = True
