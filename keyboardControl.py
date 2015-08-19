@@ -73,6 +73,7 @@ def loop():
 
             if c == 'w':
                 thrust = thrust + THRUST_INCREMENT
+               # thrust = 0.8
             elif c == 'a':
                 yaw = yaw + YAW_INCREMENT                
             elif c == 's':

@@ -184,7 +184,7 @@ class KeyboardInterface(object):
         elif c == 'f':                
             self.comm.startSensorDump(0)
         elif c == 'v':
-            self.comm.requestDumpData(0x80 + 0, 0x80 + 7000, 64)            
+            self.comm.requestDumpData(0x80 + 0, 0x80 + 7000, 72)            
         elif c == 't':
             self.comm.requestTelemetry()        
         elif c == 'y':
@@ -212,17 +212,24 @@ class KeyboardInterface(object):
             self.comm.hallPIDOn()
             #self.comm.setWingStop(1)
         elif c == '7':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 10)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(10,10000)
+            self.hall.thrust.set(17.0)
+            self.freq_changed = True
+            self.pitch.set(90.0)
+            print   "Yaw, Pitch, Roll: " + str(self.yaw.value()) + " " + \
+                    str(self.pitch.value()) + " " + str(self.roll.value())
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )        
         elif c == '8':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 15)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(15,10000)
+            self.pitch.set(-90.0)
+            print   "Yaw, Pitch, Roll: " + str(self.yaw.value()) + " " + \
+                    str(self.pitch.value()) + " " + str(self.roll.value())
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )        
         elif c == '9':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 5)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(5,10000)
+            self.hall.thrust.set(1.0)
+            self.freq_changed = True
+            self.pitch.set(90.0)
+            print   "Yaw, Pitch, Roll: " + str(self.yaw.value()) + " " + \
+                    str(self.pitch.value()) + " " + str(self.roll.value())
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )        
         elif c == '0':
             #self.pinging = not self.pinging
             self.comm.setSlewLimit(5.0)

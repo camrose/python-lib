@@ -159,7 +159,6 @@ class VideoStreamer(object):
             col = raw[2]
             pixels = raw[3::]
             curr_time = time.time() - st
-            
             #print 'Line:' + str(len(curr_line)) + ' ' + 'Pix:' + str(len(pixels)) + '\n'
             if len(curr_line) == 0 and len(pixels) == 75:
                 curr_line.extend(pixels)
@@ -206,7 +205,7 @@ class VideoStreamer(object):
             
             if len(curr_line) == 128:
                 #print str(curr_line)
-                print str(line_num)
+                print "Line:" + str(line_num)
                 curr_line.extend([curr_time])
                 dat.append(curr_line)
                 self.writeBlock(row, 0, 128, curr_line)
@@ -215,12 +214,18 @@ class VideoStreamer(object):
         
         if type == Commands['LINE_EDGE_RESPONSE']:
             #print "Data len: " + str(len(data))
-            data_flag = str((len(data)-6)) + 'B'
-            raw = unpack('LH' + data_flag, data)
+            data_flag = str((len(data)-16)) + 'B'
+            #raw = unpack('2H', data)
+            raw = unpack('2HL2f2B', data)
+            print raw
             
-            timestamp = raw[0]
+            frame_num = raw[0]
             frame_num = raw[1]
-            locs = raw[2::]
+            timestamp = raw[2]
+            distance = raw[3]
+            location = raw[4]
+            locs = raw[5::]
+            #locs = [0]
             curr_time = time.time() - st
             
             print 'Locs:' + str(locs) + '\n'
@@ -230,6 +235,7 @@ class VideoStreamer(object):
                     curr_line[locs[i]] = 255
             
             print str(frame_num)
+            dat.append(locs)
             self.writeBlock(0,0,128,curr_line)
             
             
@@ -419,6 +425,7 @@ if __name__ == '__main__':
             curr_time = time.time()
             if ((curr_time - prev_time) > 0.4) and start_stream:
                 comm.requestLineFrames()
+                #comm.requestLineEdges()
                 streamer.updateImage()
                 prev_time = curr_time;
                 
@@ -449,7 +456,8 @@ if __name__ == '__main__':
                     #comm.requestLineFrames()
                     #streamer.decayIndicators()
                 elif c == 's':
-                    comm.setExposure(streamer.et.value(), streamer.fs.value())
+                    comm.setExposure(351, 12000)
+                    #comm.setExposure(streamer.et.value(), streamer.fs.value())
                 elif c == '1':
                     streamer.fs.decrease()
                     print "Freq: " + str(streamer.fs.value())

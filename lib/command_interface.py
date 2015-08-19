@@ -149,11 +149,12 @@ class CommandInterface(object):
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def setLinePid(self, coeffs):
-        data_pack = pack('7f', *coeffs)
+        data_pack = pack(2*'7f', *coeffs)
         if self.debugPrint:
             print ("Setting PID coefficents to: \n" + \
                     "\tOffset Kp Ki Kd\n" + \
-                    "Line: " + str(coeffs[1:5]))
+                    "Line: " + str(coeffs[1:5])) + "\n" + \
+                    "Line Height: " + str(coeffs[8:12])
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_LINE_PID'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
@@ -340,12 +341,63 @@ class CommandInterface(object):
             print "Setting line sensor exposure time to exp: " + str(et) + ", freq: " + str(fs)
         pld = Payload(data = data_pack, status = 0, type = Commands['LINE_SET_EXPOSURE'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
+    def setEmptyThreshold(self, thresh):
+        data_pack = pack('H', thresh)
+        if self.debugPrint:
+            print "Setting line sensor empty frame threshold to: " + str(thresh)
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_EMPTY_THRESHOLD'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
+    def setHeightFilterWindow(self, window):
+        data_pack = pack('H', window)
+        if self.debugPrint:
+            print "Setting height median filter window to: " + str(window)
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_HEIGHT_FILTER'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def trackMarker(self, flag):
         data_pack = pack('B', flag)
         if self.debugPrint:
             print "Tracking marker: " + str(flag)
         pld = Payload(data = data_pack, status = 0, type = Commands['TRACK_MARKER'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
+    def setExperiment(self, exper):
+        data_pack = pack('B', *exper)
+        if self.debugPrint:
+            print ("Setting experiement: \n" + \
+                    "Use line sensor?: " + str(exper[0]))
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_EXPERIMENT'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+    
+    def toggleExperiment(self, flag):
+        data_pack = pack('B', flag)
+        if self.debugPrint:
+            if flag == 1:
+                print "Starting experiment"
+            elif flag == 0:
+                print "Stopping experiment"
+            else:
+                print "Experiment set fail"
+                
+        pld = Payload(data = data_pack, status = 0, type = Commands['TOGGLE_EXPERIMENT'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def setLineOffsets(self, offsets):
+        data_pack = pack(2*'f', *offsets)
+        if self.debugPrint:
+            print ( "Setting line offset to: " + str(offsets[0]) + "\n" + \
+                    "Setting height offset to: " + str(offsets[1]) )
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_LINE_OFFSETS'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def setLineRef(self, ref):
+        data_pack = pack(2*'f', *ref)
+        if self.debugPrint:
+            print ( "Setting line frame reference to: " + str(ref[0]) + "\n" + \
+                    "Setting height reference to: " + str(ref[1]) )
+        pld = Payload(data = data_pack, status = 0, type = Commands['SET_LINE_REF'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
         
     def foundMarker(self):

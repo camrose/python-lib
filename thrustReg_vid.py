@@ -5,7 +5,7 @@ from math import *
 from xbee import XBee
 from lib.dictionaries import *
 from lib.command_interface import CommandInterface
-from lib.telemetry_reader import TelemetryReader
+from lib.telemetry_reader_line import TelemetryReader
 from lib.network_coordinator import NetworkCoordinator
 from lib.payload import Payload
 from lib.quaternion import *
@@ -418,16 +418,21 @@ class KeyboardInterface(object):
         self.thrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.05 )
         self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.25 )        
         # PID constants        
-        self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0] # For steer Ki 0.8
+        self.line_coeffs = [ 63.5,    0.0,    0.018,   0.004,    0.0001,    1.0,    1.0] # For steer Ki 0.8
+        self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0]
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator control
         #self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust control
         #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator manual
-        self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust manual
+        #self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust manual
+        self.roll_coeffs = [ 1.6,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust with line track (ref in meters)
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
+        self.pitch_filter_coeffs = [ 3, 1, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
+        self.line_filter_coeffs = [ 3, 3, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
         
         
-        self.line_coeffs = [63.5, 0.0, 2.0, 0.0, 0.0, 1.0, 1.0]
+        self.line_height_coeffs = [1.6,  0.65,  0.0,  0.001,  0.0, 1.0, 1.0]
+        self.thresh = 25
         
         
         
@@ -509,7 +514,7 @@ class KeyboardInterface(object):
         elif c == '1':                
             self.comm.setRegulatorMode(RegulatorStates['Off'])
         elif c == '2':                
-            self.comm.setRegulatorMode(RegulatorStates['Track Hall'])
+            self.comm.setRegulatorMode(RegulatorStates['Stabilize'])
         elif c == '3':                
             self.comm.setRegulatorMode(RegulatorStates['Remote Control'])                    
         elif c == '4':
@@ -550,23 +555,29 @@ class KeyboardInterface(object):
         # Configuration
         elif c == 'p':                
             self.comm.setRegulatorPid( self.yaw_coeffs + self.pitch_coeffs + self.roll_coeffs )
-            self.comm.setLinePid( self.line_coeffs )                                
+            self.comm.setLinePid( self.line_coeffs + self.line_height_coeffs )                                
             self.comm.setRegulatorRateFilter( self.yaw_filter_coeffs )
-            self.comm.setHallGains([5,0.2,100,0,900])
+            self.comm.setRegulatorRateFilter( self.pitch_filter_coeffs )
+            self.comm.setRegulatorRateFilter( self.line_filter_coeffs )
+            self.comm.setEmptyThreshold( self.thresh )
+            #self.comm.setHallGains([5,0.2,100,0,900])
             self.comm.setTelemetrySubsample(1)
-            self.comm.setExposure(351, 10000)
+            self.comm.setExposure(351, 14000)
         elif c == ']':
-            self.hall.thrust.increase()
-            self.freq_changed = True
-            #self.thrust.increase()
-            #self.rc_changed = True 
-            #self.offsets_changed = True                        
+            #self.hall.thrust.increase()
+            #self.freq_changed = True
+            self.thrust.increase()
+            self.rc_changed = True 
+            self.offsets_changed = True                        
         elif c == '[':
-            self.hall.thrust.decrease()
-            self.freq_changed = True
-            #self.thrust.decrease()
-            #self.rc_changed = True 
-            #self.offsets_changed = True            
+            #self.hall.thrust.decrease()
+            #self.freq_changed = True
+            self.thrust.decrease()
+            self.rc_changed = True 
+            self.offsets_changed = True
+        elif c == 'o':
+            self.yaw.set(90.0)
+            self.ref_changed = True           
         elif c == '\x1b': #Esc key
             #break
             raise Exception('Exit')
@@ -680,7 +691,9 @@ def loop():
 
         try:
             curr_time = time.time()
-            if ((curr_time - prev_time) > 2.0) and start_stream:
+            if ((curr_time - prev_time) > 0.05) and start_stream:
+                comm.requestLineFrames()
+                streamer.updateImage()
                 comm.foundMarker()
                 prev_time = curr_time;
             c = None
@@ -705,7 +718,7 @@ def loop():
                 elif c == '\x1b': #Esc key
                     raise Exception('Exit')
             kbint.process(c)
-            time.sleep(0.1)
+            time.sleep(0.05)
             #comm.sendPing()
 
         except Exception as e:
