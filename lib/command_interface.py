@@ -343,9 +343,10 @@ class CommandInterface(object):
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
     def setEmptyThreshold(self, thresh):
-        data_pack = pack('H', thresh)
+        data_pack = pack('HH', *thresh)
         if self.debugPrint:
-            print "Setting line sensor empty frame threshold to: " + str(thresh)
+            print ( "Setting line sensor empty frame threshold to: " + str(thresh[0]) + "\n" + \
+                    "Setting line sensor full frame threshold to: " + str(thresh[1]) )
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_EMPTY_THRESHOLD'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
@@ -364,10 +365,10 @@ class CommandInterface(object):
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
     def setExperiment(self, exper):
-        data_pack = pack('B', *exper)
+        data_pack = pack('B', exper)
         if self.debugPrint:
             print ("Setting experiement: \n" + \
-                    "Use line sensor?: " + str(exper[0]))
+                    "Use line sensor?: " + str(exper))
         pld = Payload(data = data_pack, status = 0, type = Commands['SET_EXPERIMENT'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
     
@@ -405,6 +406,13 @@ class CommandInterface(object):
         if self.debugPrint:
             print "Found marker?"
         pld = Payload(data = data_pack, status = 0, type = Commands['FOUND_MARKER_REQUEST'])
+        self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
+        
+    def startStrobe(self, params):
+        data_pack = pack('4H', *params)
+        if self.debugPrint:
+            print "Starting Strobe"
+        pld = Payload(data = data_pack, status = 0, type = Commands['START_STROBE'])
         self.tx_callback(dest = self.endpoint_addr, packet = str(pld))
                     
     def processPacket(self, packet):

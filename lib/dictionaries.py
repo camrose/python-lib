@@ -115,6 +115,7 @@ Commands = {
     'SET_HALL_INPUT':0x57,
     'HALL_PID_ON': 0x58,
     'TOGGLE_FIGURE_EIGHT': 0x59,
+    'START_STROBE': 0x5A,
     'LS_START': 0x5B,
     'LINE_FRAME_RESPONSE': 0x5C,
     'LINE_FRAME_REQUEST': 0x5D,

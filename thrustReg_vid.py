@@ -248,11 +248,7 @@ class VideoStreamer(object):
             self.drawMax(raw[2:4])
             print "Max lum: " + str(raw[4]) + " avg: " + str(raw[5])
             self.updateImage()           
-            self.displayFrameRate()
-            
-            
-        else:
-            print "Invlid command: " + str(type)                                
+            self.displayFrameRate()                              
                         
     def displayFrameRate(self):
         now = time.clock()
@@ -416,23 +412,26 @@ class KeyboardInterface(object):
         # Actuator state
         self.elevator = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.2 )
         self.thrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.05 )
+        self.lineThrust = IncrementCounter( start_value = 0.0, range = (1.0, 0.0), increment = 0.05 )
         self.steer = IncrementCounter( start_value = 0.0, range = (1.0, -1.0), increment = 0.25 )        
         # PID constants        
-        self.line_coeffs = [ 63.5,    0.0,    0.018,   0.004,    0.0001,    1.0,    1.0] # For steer Ki 0.8
+        self.line_coeffs = [ 63.5,    0.0,    0.01,   0.0,    0.0002,    1.0,    1.0] # For steer Ki 0.8
         self.yaw_coeffs = [ 0.0,    0.0,    2.0,   0.0,    0.4,    1.0,    1.0]
+        #self.yaw_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0]
         self.pitch_coeffs = [ 0.0,    0.0,    3.0,   0.0,    0.2,    1.0,    1.0] # For elevator control
         #self.roll_coeffs = [ 0.0,    0.0,    -0.2,   0.0,    0.0,    1.0,    1.0] # For thrust control
         #self.pitch_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For elevator manual
         #self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust manual
-        self.roll_coeffs = [ 1.6,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust with line track (ref in meters)
+        self.roll_coeffs = [ 0.0,    0.0,    0.0,   0.0,    0.0,    1.0,    1.0] # For thrust with line track (ref in meters)
         self.yaw_filter_coeffs = [ 3, 0, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         self.pitch_filter_coeffs = [ 3, 1, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         self.line_filter_coeffs = [ 3, 3, 0.0007, 0.0021, 0.0021, 0.0007, 1.0, 2.6861573965, -2.419655111, 0.7301653453]
         # self.yaw_filter_coeffs = [ 3, 0, 56.0701e-6, 168.2103e-6, 168.2103e-6, 56.0701e-6, 1, -2.8430, 2.6980, -0.8546]
         
-        
-        self.line_height_coeffs = [1.6,  0.65,  0.0,  0.001,  0.0, 1.0, 1.0]
-        self.thresh = 25
+        self.strobe_params = [ 2, 0, 2, 2 ]
+        self.line_height_coeffs = [1.6,  0.0,  0.0,  0.05,  0.0, 1.0, 1.0]
+        self.thresh = (15,10)
+        self.window = 7
         
         
         
@@ -522,27 +521,22 @@ class KeyboardInterface(object):
             self.rate_control = not self.rate_control           
             self.comm.setRateMode(self.rate_control)
         elif c == '5':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 5)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallGains([5,0.2,100,0,900])
-            self.comm.setHallThrust(5,10000)
-            #self.comm.calibWings()
+            self.comm.setLineRef((63.5,2.6))
         elif c == '6':
-            self.comm.hallPIDOn()
-            #self.comm.setWingStop(1)
+            self.comm.setExperiment(1)
         elif c == '7':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 10)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(10,10000)
+            #self.comm.toggleExperiment(1)
+            #self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), 0.2))
+            self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), 0.3))
         elif c == '8':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 15)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(15,10000)
+            #self.comm.toggleExperiment(0)
+            #self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), self.thrust.value()))
+            self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), 1.0))
         elif c == '9':
-            self.hall.setVelProfile([90, 180, 270, 360], [25, 25, 25, 25], 5)
-            self.comm.setVelProfile(self.hall.delta+self.hall.interval+self.hall.vel, self.hall.num_setpoints)
-            self.comm.setHallThrust(5,10000)
+            #self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), 1.0))
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( 0.0, self.pitch.value(), self.roll.value() ) )
         elif c == '0':
+            #self.comm.setRegulatorRef( eulerToQuaternionDeg( 180.0, self.pitch.value(), self.roll.value() ) )
             #self.pinging = not self.pinging
             self.comm.setSlewLimit(5.0)
             self.comm.toggleFigureEight(1)
@@ -560,6 +554,7 @@ class KeyboardInterface(object):
             self.comm.setRegulatorRateFilter( self.pitch_filter_coeffs )
             self.comm.setRegulatorRateFilter( self.line_filter_coeffs )
             self.comm.setEmptyThreshold( self.thresh )
+            self.comm.setHeightFilterWindow(self.window)
             #self.comm.setHallGains([5,0.2,100,0,900])
             self.comm.setTelemetrySubsample(1)
             self.comm.setExposure(351, 14000)
@@ -567,12 +562,14 @@ class KeyboardInterface(object):
             #self.hall.thrust.increase()
             #self.freq_changed = True
             self.thrust.increase()
+            self.lineThrust.increase()
             self.rc_changed = True 
             self.offsets_changed = True                        
         elif c == '[':
             #self.hall.thrust.decrease()
             #self.freq_changed = True
             self.thrust.decrease()
+            self.lineThrust.decrease()
             self.rc_changed = True 
             self.offsets_changed = True
         elif c == 'o':
@@ -588,6 +585,7 @@ class KeyboardInterface(object):
             
         if self.offsets_changed:
             self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), self.thrust.value()))
+            self.comm.setLineOffsets((0.0, self.lineThrust.value()))
             self.offsets_changed = False
             
         if self.rate_changed:
@@ -597,7 +595,7 @@ class KeyboardInterface(object):
         if self.ref_changed:                    
             print   "Yaw, Pitch, Roll: " + str(self.yaw.value()) + " " + \
                     str(self.pitch.value()) + " " + str(self.roll.value())
-            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )        
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )
             self.ref_changed = False
 
         if self.rot_changed:
@@ -618,7 +616,7 @@ def txCallback(dest, packet):
     
 def rxCallback(packet):
     global telem, coord
-    streamer.processPacket(packet)
+    #streamer.processPacket(packet)
     telem.processPacket(packet)
     coord.processPacket(packet)
     
@@ -643,7 +641,7 @@ def loop():
         print "Wrong number of arguments. Must be: COM BAUD ADDR"
         sys.exit(1)
     
-    streamer = VideoStreamer(txCallback)
+    #streamer = VideoStreamer(txCallback)
     ser = Serial(port = com, baudrate = baud) 
     xb = XBee(ser, callback = rxCallback)
     print "Setting PAN ID to " + hex(DEFAULT_PAN)
@@ -664,9 +662,9 @@ def loop():
     telem.writeHeader()
     coord.resume()
     
-    comm.setSlewLimit(4.0)
+    comm.setSlewLimit(0.0)
     
-    streamer.setEndpoint(addr)    
+    #streamer.setEndpoint(addr)    
     time.sleep(0.25)
     
     prev_time = time.time()
@@ -693,7 +691,7 @@ def loop():
             curr_time = time.time()
             if ((curr_time - prev_time) > 0.05) and start_stream:
                 comm.requestLineFrames()
-                streamer.updateImage()
+                #streamer.updateImage()
                 comm.foundMarker()
                 prev_time = curr_time;
             c = None
@@ -715,6 +713,7 @@ def loop():
                     else:
                         track_marker = 1
                         comm.trackMarker(1)
+                        comm.startStrobe(kbint.strobe_params)
                 elif c == '\x1b': #Esc key
                     raise Exception('Exit')
             kbint.process(c)
@@ -732,7 +731,7 @@ def loop():
         f.write(row_str.strip('[]') + "\n")
     f.close()
     telem.close()
-    streamer.close()                
+    #streamer.close()                
     xb.halt()
     ser.close()
     
