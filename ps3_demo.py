@@ -2,35 +2,37 @@
 import pygame
 import os
 import time
- 
+#import usb
+
 os.environ['SDL_VIDEO_CENTERED'] = '1'
- 
+
 if not pygame.display.get_init():
     pygame.display.init() 
- 
+
 if not pygame.font.get_init():
     pygame.font.init()
- 
+
 if not pygame.mixer.get_init():
     pygame.mixer.init()  
- 
+
 if not pygame.joystick.get_init():
     pygame.joystick.init()
- 
+
 width = 900
 height = 560
 path_image = "./ps3_controller.png"
- 
+
 class PS3_Controller:
   
-  def __init__(self):
+  def __init__(self, surface):
     self.joystick = None
     self.buttons = None
+    self.surface = surface
     self.t = 0
     self.time = time.time
     self.left_axis = None
     self.right_axis = None
- 
+
   def update_axis(self):
     if self.joystick is not None:
       try:
@@ -38,7 +40,7 @@ class PS3_Controller:
         self.right_axis =[ self.joystick.get_axis(2), self.joystick.get_axis(3)]
       except pygame.error:  
         print "Axis Error"
- 
+
   def is_pressed(self, button_name):
     if self.buttons is not None:
       if button_name == 'left_stick':
@@ -61,7 +63,7 @@ class PS3_Controller:
           return False
     else:
       return False
- 
+
   def update_buttons(self):
     if self.joystick is not None:
       pygame.event.pump()
@@ -90,13 +92,53 @@ class PS3_Controller:
     else:
       self.buttons = None
     return
- 
+
+  #def check_if_connected(self):
+  #  try:
+  #    busses = usb.busses()
+  #    for bus in busses:
+  #        devices = bus.devices
+  #        for dev in devices:
+  #          if dev.idVendor == 1356:
+  #            return True
+  #    return False
+  #  except usb.core.USBError:
+  #    print "USB Disconnected"
+  #    return False
+    
+  def check_status(self):
+    self.update_buttons()
+    #if self.check_if_connected():
+    if 1: 
+      if self.t == 0:
+        print "Connected"
+        self.t = 1
+        pygame.joystick.quit()
+        pygame.joystick.init()
+        joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        while len(joysticks) <= 0:
+          pygame.joystick.quit()
+          pygame.joystick.init()
+          joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        for joystick in joysticks:
+          if 'playstation' in joystick.get_name().lower():
+            print joystick.get_name()
+            self.joystick = joystick
+            self.joystick.init()
+    
+    else:
+      print 'Disconnected'
+      pygame.joystick.quit()
+      self.t = 0
+      self.joystick = None
+      self.buttons = None
+
 figures = { 'square' : ['circle', 31], 'x' : ['circle', 31], 'triangle' : ['circle', 31], 'ps' : ['circle', 31], 'circle' : ['circle', 31],
           'up' : ['polygon'], 'down' : ['polygon'], 'left' : ['polygon'], 'right' : ['polygon'], 'right_stick' : ['circle', 60],
           'left_stick' : ['circle', 60], 'select' : ['rectangle'], 'start' : ['polygon'], 'l3' : ['circle', 60], 'r3' : ['circle', 60],
           'r1' : ['rectangle'], 'r2' : ['rectangle'], 'l1' : ['rectangle'], 'l2' : ['rectangle'], 
           }
- 
+
 coords = { 'square': (651, 208), 'x' : (717, 275), 'circle' : (782, 208), 'triangle' : (716, 141), 'right_stick' : (578, 346),
         'left_stick' : (319, 342), 
         'up' : [(164, 135), (202, 135), (202, 169), (184, 187), (164, 169), (164, 135)],
@@ -106,22 +148,22 @@ coords = { 'square': (651, 208), 'x' : (717, 275), 'circle' : (782, 208), 'trian
         'select' : (349, 212, 38, 18), 'start' : [(511, 212), (539, 221), (511, 232), (511, 212)],
         'ps' : (454, 288), 'l3' : (319, 342), 'r3' : (578, 346), 'l1' : (115, 30, 138, 27), 'l2' : (115, 30, 138, 27),
         'r1' : (647, 30, 138, 27), 'r2' : (647, 30, 138, 27) }
- 
+
 if __name__ == "__main__":
   pygame.init()
-  #surface = pygame.display.set_mode((width,height))  
-  #pygame.display.set_caption('Pygame PS3 Demo')
-  #fondo = pygame.image.load(path_image)
-  controller = PS3_Controller()
+  surface = pygame.display.set_mode((width,height))  
+  pygame.display.set_caption('Pygame PS3 Demo')
+  fondo = pygame.image.load(path_image)
+  controller = PS3_Controller(surface)
   while True:
-    #surface.blit(fondo, (0,0))
+    surface.blit(fondo, (0,0))
+    controller.check_status()
     for figure in figures:
       if controller.is_pressed(figure):
-          print figure
-        #if figures[figure][0] == 'circle':
-          #pygame.draw.circle(surface, (255, 0, 0), coords[figure], figures[figure][1], 0)
-        #elif figures[figure][0] == 'polygon':
-          #pygame.draw.polygon(surface, (255, 0, 0), coords[figure], 0)
-        #elif figures[figure][0] == 'rectangle':
-          #pygame.draw.rect(surface, (255, 0, 0), coords[figure], 0)
-    #pygame.display.update()
+        if figures[figure][0] == 'circle':
+          pygame.draw.circle(surface, (255, 0, 0), coords[figure], figures[figure][1], 0)
+        elif figures[figure][0] == 'polygon':
+          pygame.draw.polygon(surface, (255, 0, 0), coords[figure], 0)
+        elif figures[figure][0] == 'rectangle':
+          pygame.draw.rect(surface, (255, 0, 0), coords[figure], 0)
+    pygame.display.update()

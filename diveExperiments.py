@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 from collections import deque
+from lib.joystick_interface_dive import JoystickInterface
+import pygame
 
 hall_gains = [0, 0, 0, 0, 0]
 duration = 0
@@ -477,7 +479,7 @@ class KeyboardInterface(object):
             # self.ref_changed = True
             # self.comm.rotateRefGlobal(quatGenerate(radians(-10), (0,0,1)))
             #self.yaw_rate.decrease()
-            self.yaw_rate.set(-2.0)                
+            self.yaw_rate.set(-1.5)                
             self.rate_changed = True
             
             # self.steer.decrease()
@@ -488,7 +490,7 @@ class KeyboardInterface(object):
             # self.ref_changed = True
             # self.comm.rotateRefGlobal(quatGenerate(radians(10), (0,0,1)))
             #self.yaw_rate.increase()
-            self.yaw_rate.set(2.0)             
+            self.yaw_rate.set(1.5)             
             self.rate_changed = True
             
             # self.steer.increase()
@@ -545,17 +547,17 @@ class KeyboardInterface(object):
             self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), 1.0))
             #self.comm.setRegulatorRef( eulerToQuaternionDeg( 0.0, self.pitch.value(), self.roll.value() ) )
         elif c == '0':
-            #self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), self.thrust.value()))
-            #
-            #if self.yaw.value() == 0.0:
-            #    self.yaw.set(180.0)
-            #elif self.yaw.value() == 180.0:
-            #    self.yaw.set(0.0)
-            #
-            #self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )
+            self.comm.setRegulatorOffsets((self.steer.value(), self.elevator.value(), self.thrust.value()))
+            
+            if self.yaw.value() == 0.0:
+                self.yaw.set(180.0)
+            elif self.yaw.value() == 180.0:
+                self.yaw.set(0.0)
+            
+            self.comm.setRegulatorRef( eulerToQuaternionDeg( self.yaw.value(), self.pitch.value(), self.roll.value() ) )
             #self.pinging = not self.pinging
-            self.comm.setSlewLimit(5.0)
-            self.comm.toggleFigureEight(1)
+            #self.comm.setSlewLimit(5.0)
+            #self.comm.toggleFigureEight(1)
             
         # Attitude
         elif c == 'c':
@@ -701,6 +703,19 @@ def loop():
     
     st = time.time()
     
+    try:
+        pygame.init()
+        j = pygame.joystick.Joystick(0)
+        j.init()
+        print j.get_name()
+        print j.get_numaxes()
+        print j.get_numballs()
+        print j.get_numbuttons()
+        print j.get_numhats()
+        joyst = JoystickInterface(comm, hall, kbint, j)
+    except Exception as e:
+        print e
+    
     while True:
 
         try:
@@ -710,6 +725,7 @@ def loop():
                 #streamer.updateImage()
                 comm.foundMarker()
                 prev_time = curr_time;
+            joyst.process()
             c = None
             if( msvcrt.kbhit() ):
                 c = msvcrt.getch()
